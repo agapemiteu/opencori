@@ -1,0 +1,19 @@
+node_modules/
+.pnpm-store/
+.turbo/
+dist/
+coverage/
+*.tsbuildinfo
+
+.env
+.env.*
+!.env.example
+
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Original attachments are retained locally but are not project source.
+handoff files/
+
