@@ -8,6 +8,7 @@ describe("parseEnvironment", () => {
       CORRI_HOST: "0.0.0.0",
       CORRI_PORT: 3_000,
       CORRI_SERVICE_VERSION: "0.0.0",
+      WEMA_DEMO_WEBHOOK_URL: "http://127.0.0.1:3001/v1/wema/deliveries",
       NODE_ENV: "development",
     });
   });

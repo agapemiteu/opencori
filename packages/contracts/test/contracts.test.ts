@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import {
   branchSchema,
+  demoBranchesResponseSchema,
   deliveryReceiptSchema,
   fallbackCommandReceiptSchema,
   deliveryEnvelopeSchema,
   geofencePolicySchema,
+  nearbyBranchesQuerySchema,
   normalizedFallbackCommandSchema,
   tenantIdSchema,
   timeZoneSchema,
@@ -97,6 +99,46 @@ describe("branch contract", () => {
     );
     expect(
       branchSchema.safeParse({ ...branch, metadata: { nested: { value: true } } }).success,
+    ).toBe(false);
+  });
+});
+
+describe("nearby branch and demo registry contracts", () => {
+  it("coerces bounded nearby query parameters", () => {
+    expect(
+      nearbyBranchesQuerySchema.parse({
+        tenantId: "wema",
+        applicationId: "alat-demo",
+        lat: "6.45",
+        lng: "3.395",
+        radiusKm: "50",
+      }),
+    ).toMatchObject({ lat: 6.45, lng: 3.395, radiusKm: 50, limit: 20 });
+    expect(
+      nearbyBranchesQuerySchema.safeParse({
+        tenantId: "wema",
+        applicationId: "alat-demo",
+        lat: "6.45",
+        lng: "3.395",
+        radiusKm: "501",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("labels demo branch registries explicitly", () => {
+    expect(
+      demoBranchesResponseSchema.parse({
+        tenantId: "wema",
+        demo: true,
+        branches: [branch],
+      }).branches,
+    ).toHaveLength(1);
+    expect(
+      demoBranchesResponseSchema.safeParse({
+        tenantId: "wema",
+        demo: false,
+        branches: [branch],
+      }).success,
     ).toBe(false);
   });
 });

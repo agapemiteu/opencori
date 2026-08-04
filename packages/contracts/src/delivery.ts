@@ -113,7 +113,40 @@ export const deliveryReceiptSchema = z
     }
   });
 
+export const deliveryAttemptPayloadSchema = z
+  .object({
+    destinationId: z.string().min(1).max(128),
+    attemptNumber: z.number().int().positive().max(100),
+    sentAt: utcDateTimeSchema,
+    envelope: deliveryEnvelopeSchema,
+  })
+  .strict();
+
+export const signedDeliveryAttemptSchema = z
+  .object({
+    algorithm: z.literal("Ed25519"),
+    keyId: z.string().min(1).max(128),
+    payload: deliveryAttemptPayloadSchema,
+    signature: z
+      .string()
+      .regex(/^[A-Za-z0-9_-]{86}(?:==)?$/, "Expected a 64-byte base64url Ed25519 signature"),
+  })
+  .strict();
+
+export const receiverAcknowledgementSchema = z
+  .object({
+    eventId: eventIdSchema,
+    destinationId: z.string().min(1).max(128),
+    receiverReference: z.string().min(1).max(256),
+    receivedAt: utcDateTimeSchema,
+    payloadHash: sha256Schema,
+  })
+  .strict();
+
 export type EncryptedPayload = z.infer<typeof encryptedPayloadSchema>;
 export type DeliveryEnvelope = z.infer<typeof deliveryEnvelopeSchema>;
 export type DeliveryState = z.infer<typeof deliveryStateSchema>;
 export type DeliveryReceipt = z.infer<typeof deliveryReceiptSchema>;
+export type DeliveryAttemptPayload = z.infer<typeof deliveryAttemptPayloadSchema>;
+export type SignedDeliveryAttempt = z.infer<typeof signedDeliveryAttemptSchema>;
+export type ReceiverAcknowledgement = z.infer<typeof receiverAcknowledgementSchema>;

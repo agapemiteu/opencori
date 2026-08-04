@@ -13,7 +13,3 @@ coverage/
 Thumbs.db
 .idea/
 .vscode/
-
-# Original attachments are retained locally but are not project source.
-handoff files/
-

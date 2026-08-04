@@ -1,0 +1,25 @@
+{
+  "name": "@corri/alat-demo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "clean": "rimraf dist",
+    "dev": "tsup src/index.ts --format esm --dts --watch",
+    "lint": "eslint src test",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@corri/contracts": "workspace:*",
+    "@corri/crypto-envelope": "workspace:*",
+    "@corri/sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "@corri/config-verifier": "workspace:*",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
