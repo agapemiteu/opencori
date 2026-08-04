@@ -1,27 +1,12 @@
 # Corri
 
-Corri adds privacy-safe branch awareness to mobile applications. It confirms opted-in
-visits, measures branch-presence duration, and relays encrypted customer requests to an
-organisation-owned receiver.
+Corri helps opted-in mobile apps recognise a branch visit and send an encrypted customer
+request to the organisation that owns the branch.
 
-Corri never receives banking credentials, account data, or readable request content. The
-host application encrypts each request before it reaches Corri.
+Corri receives visit metadata and encrypted data. It does not receive readable complaints,
+banking credentials, account numbers, or transaction data.
 
-## Current status
-
-The first Wema and ALAT backend slice is working:
-
-- signed Wema branch configuration and nearby-branch lookup
-- the published `@corri/sdk` visit state machine
-- customer confirmation, visit timing, and controlled exit
-- host-side encryption and signed relay delivery
-- mock Wema verification, decryption, and delivery receipts
-- privacy-safe delivery latency and branch-presence metrics
-
-Native mobile adapters, durable persistence, queued retries, and visual applications are
-still pending. See [TODOS.md](TODOS.md) for the honest implementation boundary.
-
-## Install the SDK
+## Use the SDK
 
 ```bash
 npm install @corri/sdk
@@ -31,24 +16,24 @@ npm install @corri/sdk
 import { createCorriClient } from "@corri/sdk";
 ```
 
-The public API and frontend integration contract are documented in
-[docs/SDK_PUBLIC_API.md](docs/SDK_PUBLIC_API.md).
+Start with the [frontend guide](docs/FRONTEND_INTEGRATION.md). Use the
+[SDK and HTTP reference](docs/SDK_PUBLIC_API.md) when you need exact methods, events, or routes.
 
-## Repository
+## What works
 
-- `apps/control-api`: configuration, nearby branches, visits, delivery, analytics, and privacy APIs
-- `apps/alat-demo`: typed host integration for the ALAT demonstration
-- `apps/mock-wema-receiver`: Wema-owned receiver simulation
-- `packages/corri-react-native`: source for the published `@corri/sdk` package
-- `packages/contracts`: shared runtime and TypeScript contracts
-- `packages/geofence-state-machine`: deterministic visit state logic
-- `packages/config-verifier`: signed-configuration verification
-- `packages/crypto-envelope`: host-side envelope encryption
-- `docs`: build specification, trust boundary, decisions, and integration guides
+- Signed Wema configuration and nearby-branch responses
+- Customer confirmation, visit timing, and controlled exit
+- Host-side request encryption
+- Encrypted delivery to the mock Wema receiver
+- Receiver verification, decryption, and delivery receipts
+- Delivery latency, branch-presence duration, and privacy proof
 
-## Development
+This is a tested demo slice. Native mobile adapters, durable storage, queued retries,
+production authentication, and visual applications are not finished.
 
-Requires Node.js 24 and pnpm 11.
+## Run locally
+
+Requires Node.js 22.14 or newer and pnpm 11 or newer.
 
 ```bash
 pnpm install
@@ -56,9 +41,16 @@ pnpm check
 pnpm dev
 ```
 
-The control API defaults to `http://localhost:3000`. The mock Wema receiver defaults to
+The control API uses `http://localhost:3000`. The mock Wema receiver uses
 `http://localhost:3001`.
 
-Read [docs/BUILD_SPEC.md](docs/BUILD_SPEC.md) before changing product behaviour. Any change
-that could expose readable customer content must preserve
-[docs/TRUST_BOUNDARY.md](docs/TRUST_BOUNDARY.md).
+## Repository guide
+
+- `apps/control-api`: SDK, demo, delivery, analytics, and privacy endpoints
+- `apps/alat-demo`: ALAT host integration example
+- `apps/mock-wema-receiver`: receiver verification and decryption demo
+- `packages/corri-react-native`: source for `@corri/sdk`
+- `packages/contracts`: shared schemas and types
+
+Security rules are defined in [the trust boundary](docs/TRUST_BOUNDARY.md). The current
+service flow is described in [the architecture summary](docs/ARCHITECTURE.md).

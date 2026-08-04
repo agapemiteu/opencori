@@ -1,94 +1,154 @@
-# Frontend Integration Contract
+# Frontend guide
 
-The frontend engineer owns presentation and interaction design. Backend modules provide a
-stable, documented integration surface.
+The frontend owns screens, permissions, notifications, native location handling, secure
+storage, and readable customer text. Corri owns signed configuration, visit state, encrypted
+delivery, and privacy-safe receipts.
 
-The complete package handoff is in `docs/SDK_PUBLIC_API.md`. Install it with
-`npm install @corri/sdk`.
+## 1. Install
 
-## Backend deliverables before frontend work
+```bash
+npm install @corri/sdk
+```
 
-- Published `@corri/sdk@0.12.0` package and typed entry point
-- Generated OpenAPI document for the control API
-- Stable response envelopes and machine-readable error codes
-- Seed commands and deterministic demo fixtures
-- Typed event schemas for approach, visit, exit, delivery, and diagnostics
-- Mock receiver endpoint behavior and signature-verification fixtures
-- Clear labels for real, simulated, unavailable, and failed states
+Use version `0.12.1` or newer.
 
-## Frontend constraints
+## 2. Create the client
 
-- Frontend applications call public API and package interfaces only.
-- Frontend applications do not import database schemas or application services.
-- Corri screens never display decrypted request content.
-- The mock Wema receiver is the only screen allowed to display demo plaintext.
-- UI changes cannot redefine domain event names, delivery states, or visit timing rules.
+```ts
+import { createCorriClient, type CorriSignatureVerifier } from "@corri/sdk";
 
-Contract changes require versioning, migration notes, and consumer tests.
+export function createAlatCorri(input: {
+  apiBaseUrl: string;
+  publicApplicationKey: string;
+  installationId: string;
+  signingKeyId: string;
+  signingPublicKey: string;
+  verifySignature: CorriSignatureVerifier;
+  secureRandomUuid: () => string;
+}) {
+  return createCorriClient({
+    apiBaseUrl: input.apiBaseUrl,
+    publicApplicationKey: input.publicApplicationKey,
+    fetch: globalThis.fetch,
+    verifySignature: input.verifySignature,
+    createId: (kind) => kind + "_" + input.secureRandomUuid(),
+    initialization: {
+      tenantId: "wema",
+      applicationId: "alat-demo",
+      anonymousInstallationId: input.installationId,
+      configurationSigningKeyId: input.signingKeyId,
+      configurationSigningPublicKey: input.signingPublicKey,
+    },
+  });
+}
+```
 
-## Available demo configuration endpoints
+The host must provide an Ed25519 signature verifier and a cryptographically secure UUID source.
+You may omit `createId` when `globalThis.crypto.randomUUID()` is available.
 
-The first backend slice provides these contract-validated endpoints:
+## 3. Start branch monitoring
+
+```ts
+await corri.syncConfiguration();
+await corri.syncNearbyBranches({
+  latitude: currentLocation.latitude,
+  longitude: currentLocation.longitude,
+});
+
+corri.setConsent({
+  branchAwareness: true,
+  notifications: true,
+});
+
+corri.startMonitoring();
+```
+
+Configuration and nearby-branch data are signed. The SDK rejects invalid signatures, the wrong
+tenant, the wrong application, and mismatched query results.
+
+## 4. Connect screens to SDK events
+
+```ts
+const unsubscribe = corri.on("branchApproach", (branch) => {
+  showVisitConfirmation(branch);
+});
+
+const visit = await corri.confirmVisit();
+const timer = corri.getVisitTimer();
+
+// Call during screen cleanup.
+unsubscribe();
+```
+
+Use these actions for the confirmation screen:
+
+| Customer action  | SDK call                  |
+| ---------------- | ------------------------- |
+| Confirm visit    | `confirmVisit()`          |
+| Not now          | `snoozeBranch()`          |
+| Not visiting     | `declineVisit()`          |
+| Dismiss          | `ignoreApproach()`        |
+| Manual visit end | `completeVisitManually()` |
+
+`triggerControlledApproach`, `recordControlledExit`, and `completeStableExit` are for the
+labelled demo only. Production location adapters must feed the same state-machine flow.
+
+## 5. Send a customer request
+
+Encrypt readable text inside the host application. Pass only the resulting
+`DeliveryEnvelope` to Corri:
+
+```ts
+import type { DeliveryEnvelope } from "@corri/sdk";
+
+export async function sendEnvelope(envelope: DeliveryEnvelope) {
+  return corri.deliverEncryptedRequest(envelope);
+}
+```
+
+The envelope must match the active tenant, application, branch, and visit. Never place readable
+customer text in Corri events, logs, diagnostics, or API requests.
+
+## HTTP endpoints
+
+The SDK calls these control API routes:
+
+| Method | Route                         | Purpose                              |
+| ------ | ----------------------------- | ------------------------------------ |
+| `GET`  | `/v1/sdk/configuration`       | Get signed application configuration |
+| `GET`  | `/v1/sdk/branches/nearby`     | Get signed nearby branches           |
+| `POST` | `/v1/sdk/visits/events`       | Record visit metadata                |
+| `POST` | `/v1/sdk/deliveries`          | Relay an encrypted envelope          |
+| `GET`  | `/v1/sdk/deliveries/:eventId` | Read a delivery receipt              |
+
+Frontend-only demo views may also use:
 
 - `GET /v1/demo/catalog`
 - `GET /v1/demo/branches`
 - `POST /v1/demo/configurations/publish`
-- `GET /v1/sdk/branches/nearby`
+- `GET /v1/demo/analytics`
+- `GET /v1/demo/privacy`
+- `GET /v1/wema/messages` on the mock receiver
 
-Nearby queries require `tenantId`, `applicationId`, `lat`, `lng`, and `radiusKm`; `limit`
-defaults to 20. Configuration and nearby responses are signed with Ed25519. The ALAT host must
-pin the application's configuration-signing public key and verify the signature before using
-either payload.
+Errors use one stable shape:
 
-The current routes expose deterministic demo fixtures only. They are not authenticated admin
-or production SDK routes, and the UI must retain the demo label.
+```json
+{
+  "error": {
+    "code": "VALIDATION_FAILED",
+    "message": "Request validation failed",
+    "requestId": "request-id"
+  }
+}
+```
 
-## Available SDK and visit interfaces
+## Not ready for production
 
-The ALAT integration imports `createCorriClient` and typed events from `@corri/sdk`.
-The current tested sequence is:
+- Native React Native geofence, permission, notification, storage, and cryptography adapters
+- Production API authentication and rate limiting
+- Durable database storage, queued retries, and restart recovery
+- Generated OpenAPI
+- Production Wema branch coordinates and production cryptographic keys
 
-1. Initialize with tenant, application, anonymous installation, and pinned signing-key data.
-2. Synchronize and verify configuration.
-3. Synchronize and verify nearby branches.
-4. Set branch-awareness consent and start monitoring.
-5. Use `triggerControlledApproach` only in visibly labelled demo mode.
-6. Confirm the visit, read `getVisitTimer`, record an exit candidate, and complete the stable
-   exit after the configured grace period.
-
-Visit metadata is sent to `POST /v1/sdk/visits/events`. Demo-only operational views read
-`GET /v1/demo/analytics` and `GET /v1/demo/privacy`. The SDK queues visit events in memory
-when the transport is unavailable and exposes an explicit flush method.
-
-The package does not yet include native permission, background geofence, notification,
-secure-storage, or Ed25519 adapters. The host supplies the signature-verification adapter until
-the React Native implementation is added.
-
-## Available encrypted delivery interfaces
-
-`AlatDemoIntegration.sendCustomerRequest` encrypts readable text inside the host boundary with
-AES-256-GCM and wraps its random content key for Wema with RSA-OAEP SHA-256. It passes only the
-validated envelope to `CorriClient.deliverEncryptedRequest`. The SDK requires an active visit
-for the same tenant, application, and branch.
-
-The control API accepts and retrieves delivery state through:
-
-- `POST /v1/sdk/deliveries`
-- `GET /v1/sdk/deliveries/:eventId?tenantId=...`
-
-Corri signs the outbound webhook with its separate Ed25519 delivery key. The mock receiver
-verifies signature, timestamp, expiry, ciphertext hash, and replay consistency before decrypting
-with its receiver-owned demo RSA private key. It exposes:
-
-- `POST /v1/wema/deliveries`
-- `GET /v1/wema/messages`
-
-The delivery receipt contains identifiers, status, timestamps, attempt count, and latency. It
-never contains readable request content. `GET /v1/demo/analytics` exposes median delivery latency
-and branch-presence duration. `GET /v1/demo/privacy` reports retained record classes and proves
-the successful demo path retains neither readable content nor ciphertext.
-
-The checked-in cryptographic keys and routes are deterministic demo fixtures only. Production
-keys must be generated, stored, rotated, and audited outside the repository. The visual ALAT,
-receiver, and Developer Console screens remain frontend work. Generated OpenAPI is also still
-pending.
+See [the SDK reference](SDK_PUBLIC_API.md) for the complete public surface and
+[the trust boundary](TRUST_BOUNDARY.md) for data-handling rules.
