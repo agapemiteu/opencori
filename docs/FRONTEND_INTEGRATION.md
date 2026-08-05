@@ -46,6 +46,10 @@ export function createAlatCorri(input: {
 The host must provide an Ed25519 signature verifier and a cryptographically secure UUID source.
 You may omit `createId` when `globalThis.crypto.randomUUID()` is available.
 
+For the local demo, `GET /v1/demo/catalog` returns the public application key, configuration
+signing key ID, configuration signing public key, and receiver encryption public key needed by
+the ALAT screens. Production apps must pin trusted keys through their release configuration.
+
 ## 3. Start branch monitoring
 
 ```ts
