@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 10, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/User/Documents/Codes/corri/apps/alat-demo/src/app/page.tsx"],"sourcesContent":["export default function HomePage() {\r\n  return (\r\n    <main>\r\n      <h1>Wema Hackaholics - ALAT Demo</h1>\r\n      <p>Frontend implementation initialized.</p>\r\n    </main>\r\n  );\r\n}"],"names":["HomePage"],"mappings":";;;;;;AAAe,SAASA;IACtB,qBACE,6VAAC;;0BACC,6VAAC;0BAAG;;;;;;0BACJ,6VAAC;0BAAE;;;;;;;;;;;;AAGT"}}]
+}
