@@ -10,7 +10,7 @@ delivery, and privacy-safe receipts.
 npm install @corri/sdk
 ```
 
-Use version `0.12.1` or newer.
+Use version `0.12.2` or newer.
 
 ## 2. Create the client
 
@@ -49,6 +49,28 @@ You may omit `createId` when `globalThis.crypto.randomUUID()` is available.
 For the local demo, `GET /v1/demo/catalog` returns the public application key, configuration
 signing key ID, configuration signing public key, and receiver encryption public key needed by
 the ALAT screens. Production apps must pin trusted keys through their release configuration.
+
+### Browser demo in this repository
+
+Inside `apps/alat-demo`, use the tested bootstrap instead of copying keys into a
+component:
+
+```ts
+import { createAlatDemoHost, loadAlatDemoBrowserBootstrap } from "../index.js";
+
+const bootstrap = await loadAlatDemoBrowserBootstrap({
+  apiBaseUrl: "http://localhost:3000",
+});
+const host = createAlatDemoHost(bootstrap.dependencies);
+await host.initialize(bootstrap.initialization);
+```
+
+Run this inside a client-side effect, keep the host in React context, and wrap the application
+with that provider in the root layout. The bootstrap loads the real demo public keys, verifies
+Ed25519 signatures with Web Crypto, and encrypts customer text inside the ALAT host.
+
+Never replace signature verification with `return true`. Never import
+`@corri/crypto-envelope` into a client component because that package uses Node crypto.
 
 ## 3. Start branch monitoring
 

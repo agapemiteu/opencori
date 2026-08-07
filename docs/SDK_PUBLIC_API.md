@@ -1,6 +1,6 @@
 # SDK and HTTP reference
 
-`@corri/sdk@0.12.1` is published on npm with the `latest` tag.
+`@corri/sdk@0.12.2` is published on npm with the `latest` tag.
 
 ```bash
 npm install @corri/sdk
@@ -8,15 +8,30 @@ npm install @corri/sdk
 
 ## Runtime exports
 
-| Export                | Use                                         |
-| --------------------- | ------------------------------------------- |
-| `createCorriClient`   | Create and initialize the normal SDK client |
-| `CorriClient`         | Build a client with a custom transport      |
-| `FetchCorriTransport` | Call the Corri HTTP API                     |
-| `CorriTransportError` | Read a failed HTTP status                   |
+| Export                             | Use                                         |
+| ---------------------------------- | ------------------------------------------- |
+| `createCorriClient`                | Create and initialize the normal SDK client |
+| `CorriClient`                      | Build a client with a custom transport      |
+| `FetchCorriTransport`              | Call the Corri HTTP API                     |
+| `CorriTransportError`              | Read a failed HTTP status                   |
+| `verifySignedPayloadWithWebCrypto` | Verify Ed25519 signatures in browsers       |
 
 Types such as `DeliveryEnvelope`, `DeliveryReceipt`, `CorriEventMap`, and
 `CorriSignatureVerifier` are also exported for TypeScript.
+
+For browser hosts, pass `verifySignedPayloadWithWebCrypto` directly:
+
+```ts
+import { createCorriClient, verifySignedPayloadWithWebCrypto } from "@corri/sdk";
+
+const corri = createCorriClient({
+  // Other required options
+  verifySignature: verifySignedPayloadWithWebCrypto,
+});
+```
+
+Native hosts without Ed25519 Web Crypto support must provide their own
+`CorriSignatureVerifier` implementation.
 
 ## Client options
 

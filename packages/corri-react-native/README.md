@@ -7,13 +7,13 @@ npm install @corri/sdk
 ```
 
 ```ts
-import { createCorriClient } from "@corri/sdk";
+import { createCorriClient, verifySignedPayloadWithWebCrypto } from "@corri/sdk";
 
 const corri = createCorriClient({
   apiBaseUrl: "https://api.example.com",
   publicApplicationKey: "public-application-key",
   fetch: globalThis.fetch,
-  verifySignature: verifyEd25519,
+  verifySignature: verifySignedPayloadWithWebCrypto,
   createId: (kind) => kind + "_" + secureRandomUuid(),
   initialization: {
     tenantId: "wema",
@@ -30,8 +30,9 @@ corri.setConsent({ branchAwareness: true, notifications: true });
 corri.startMonitoring();
 ```
 
-The host application must provide signature verification, a secure UUID source, native
-location behavior, secure storage, and request encryption. Send only an encrypted
+`verifySignedPayloadWithWebCrypto` is for browsers with Ed25519 Web Crypto support.
+Native hosts may provide their own verifier. Every host must provide secure UUIDs, location
+behavior, secure storage, and request encryption. Send only an encrypted
 `DeliveryEnvelope` to `deliverEncryptedRequest()`.
 
 Main methods:
@@ -42,4 +43,4 @@ Main methods:
 - `deliverEncryptedRequest()` and `getDeliveryReceipt()`
 - `on()`, `off()`, and `getDiagnostics()`
 
-Version `0.12.1` is the current npm `latest` release.
+Version `0.12.2` is the current npm `latest` release.

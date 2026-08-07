@@ -36,6 +36,8 @@ import type {
   VisitToken,
 } from "./public-types.js";
 
+export { verifySignedPayloadWithWebCrypto, type WebCryptoSignatureProvider } from "./web-crypto.js";
+
 export type {
   ApplicationId,
   Branch,

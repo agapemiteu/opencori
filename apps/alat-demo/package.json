@@ -14,11 +14,11 @@
   },
   "dependencies": {
     "@corri/contracts": "workspace:*",
-    "@corri/crypto-envelope": "workspace:*",
     "@corri/sdk": "workspace:*"
   },
   "devDependencies": {
     "@corri/config-verifier": "workspace:*",
+    "@corri/crypto-envelope": "workspace:*",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }
