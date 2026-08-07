@@ -7,7 +7,7 @@ import {
   nearbyBranchesPayloadSchema,
   publicConfigurationSchema,
 } from "@corri/contracts";
-import { decryptRequest } from "@corri/crypto-envelope";
+import { decryptRequest, encryptRequest } from "@corri/crypto-envelope";
 import type { CorriTransport, VisitEvent } from "@corri/sdk";
 import { describe, expect, it } from "vitest";
 
@@ -156,6 +156,7 @@ describe("ALAT Demo Corri integration", () => {
     const host = createAlatDemoHost({
       transport,
       verifySignature: verifySignedPayload,
+      encryptRequest,
       receiverEncryptionKeyId: "receiver-test-key",
       receiverEncryptionPublicKey: receiverPublicKey
         .export({ type: "spki", format: "pem" })

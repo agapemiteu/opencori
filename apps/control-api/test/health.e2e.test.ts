@@ -74,6 +74,30 @@ describe("control API", () => {
     });
   });
 
+  it("allows the configured ALAT demo origin and does not reflect other origins", async () => {
+    const testApp = await createTestApplication();
+    const allowed = await testApp.inject({
+      method: "OPTIONS",
+      url: "/v1/health",
+      headers: {
+        origin: "http://localhost:3002",
+        "access-control-request-method": "GET",
+      },
+    });
+    const untrusted = await testApp.inject({
+      method: "OPTIONS",
+      url: "/v1/health",
+      headers: {
+        origin: "https://untrusted.example",
+        "access-control-request-method": "GET",
+      },
+    });
+
+    expect(allowed.statusCode).toBe(204);
+    expect(allowed.headers["access-control-allow-origin"]).toBe("http://localhost:3002");
+    expect(untrusted.headers["access-control-allow-origin"]).toBeUndefined();
+  });
+
   it("returns a stable error envelope and preserves a valid request ID", async () => {
     const testApp = await createTestApplication();
     const response = await testApp.inject({

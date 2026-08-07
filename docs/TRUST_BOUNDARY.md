@@ -1,7 +1,7 @@
-# Corri Trust Boundary
+# Privacy boundary
 
-Corri is neutral infrastructure. It handles physical-context metadata and encrypted
-delivery envelopes. It does not process banking records or readable customer requests.
+Corri handles branch-visit metadata and encrypted delivery. It must not receive banking
+records or readable customer requests.
 
 ## Corri may process
 

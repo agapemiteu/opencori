@@ -14,8 +14,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@corri/config-verifier": "workspace:*",
-    "@corri/contracts": "workspace:*",
     "@corri/crypto-envelope": "workspace:*",
     "@corri/sdk": "workspace:*",
     "next": "^16.3.0",
@@ -23,6 +21,8 @@
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
+    "@corri/config-verifier": "workspace:*",
+    "@corri/contracts": "workspace:*",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "catalog:",
     "@types/react": "^19.2.18",

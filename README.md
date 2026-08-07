@@ -1,10 +1,35 @@
 # Corri
 
-Corri helps opted-in mobile apps recognise a branch visit and send an encrypted customer
+Corri lets an opted-in app recognise a branch visit and send an encrypted customer
 request to the organisation that owns the branch.
 
-Corri receives visit metadata and encrypted data. It does not receive readable complaints,
-banking credentials, account numbers, or transaction data.
+The host app encrypts the request. Corri handles branch presence, encrypted delivery,
+and the receipt. Corri does not need readable complaints or banking data.
+
+> Hackathon status: the backend flow and SDK work. The visual ALAT, receiver, and
+> developer-console screens are still being built.
+
+## Run it
+
+Requires Node.js 22.14+ and pnpm 11+.
+
+```bash
+git clone https://github.com/agapemiteu/corri.git
+cd corri
+pnpm install
+pnpm dev
+```
+
+| Service            | URL                                      |
+| ------------------ | ---------------------------------------- |
+| Corri API          | <http://localhost:3000/v1/health>        |
+| Demo configuration | <http://localhost:3000/v1/demo/catalog>  |
+| Mock Wema receiver | <http://localhost:3001/v1/wema/messages> |
+
+A frontend can run on `http://localhost:3002`. There is no visual app on
+`main` yet.
+
+Run `pnpm check` before opening a pull request.
 
 ## Use the SDK
 
@@ -12,45 +37,35 @@ banking credentials, account numbers, or transaction data.
 npm install @corri/sdk
 ```
 
-```ts
-import { createCorriClient } from "@corri/sdk";
+Choose one guide:
+
+| Goal                                  | Guide                                      |
+| ------------------------------------- | ------------------------------------------ |
+| Fork Corri and build the ALAT screens | [Getting started](docs/GETTING_STARTED.md) |
+| Add `@corri/sdk` to another app       | [SDK reference](docs/SDK.md)               |
+| Check what Corri may store            | [Privacy boundary](docs/TRUST_BOUNDARY.md) |
+
+## How it works
+
+```text
+Customer writes in ALAT
+  -> ALAT encrypts
+  -> Corri relays ciphertext
+  -> Wema verifies and decrypts
+  -> ALAT receives a delivery receipt
 ```
 
-Start with the [frontend guide](docs/FRONTEND_INTEGRATION.md). Use the
-[SDK and HTTP reference](docs/SDK_PUBLIC_API.md) when you need exact methods, events, or routes.
+The same SDK state machine handles approach, confirmation, visit timing, and exit.
+The demo reports delivery latency, visit duration, and privacy-safe evidence.
 
-## What works
+## Repository map
 
-- Signed Wema configuration and nearby-branch responses
-- Customer confirmation, visit timing, and controlled exit
-- Host-side request encryption
-- Encrypted delivery to the mock Wema receiver
-- Receiver verification, decryption, and delivery receipts
-- Delivery latency, branch-presence duration, and privacy proof
+| Path                          | Purpose                                        |
+| ----------------------------- | ---------------------------------------------- |
+| `apps/control-api`            | Configuration, visits, delivery, and analytics |
+| `apps/alat-demo`              | Tested ALAT host integration                   |
+| `apps/mock-wema-receiver`     | Receiver verification and decryption           |
+| `packages/corri-react-native` | Source for `@corri/sdk`                        |
+| `packages/contracts`          | Shared types and validation                    |
 
-This is a tested demo slice. Native mobile adapters, durable storage, queued retries,
-production authentication, and visual applications are not finished.
-
-## Run locally
-
-Requires Node.js 22.14 or newer and pnpm 11 or newer.
-
-```bash
-pnpm install
-pnpm check
-pnpm dev
-```
-
-The control API uses `http://localhost:3000`. The mock Wema receiver uses
-`http://localhost:3001`.
-
-## Repository guide
-
-- `apps/control-api`: SDK, demo, delivery, analytics, and privacy endpoints
-- `apps/alat-demo`: ALAT host integration example
-- `apps/mock-wema-receiver`: receiver verification and decryption demo
-- `packages/corri-react-native`: source for `@corri/sdk`
-- `packages/contracts`: shared schemas and types
-
-Security rules are defined in [the trust boundary](docs/TRUST_BOUNDARY.md). The current
-service flow is described in [the architecture summary](docs/ARCHITECTURE.md).
+The demo uses in-memory storage, demo keys, and non-production branch coordinates.
