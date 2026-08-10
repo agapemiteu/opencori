@@ -116,6 +116,9 @@ importers:
       '@corri/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@corri/crypto-envelope':
+        specifier: workspace:*
+        version: link:../../packages/crypto-envelope
       '@corri/sdk':
         specifier: workspace:*
         version: link:../../packages/corri-react-native

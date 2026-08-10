@@ -12,8 +12,8 @@ const config: Config = {
         wema: {
           purple: "#7c3aed", // You can adjust this to exact Wema brand hex
           light: "#ede9fe",
-        }
-      }
+        },
+      },
     },
   },
   plugins: [],

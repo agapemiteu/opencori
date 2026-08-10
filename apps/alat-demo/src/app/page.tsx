@@ -60,13 +60,16 @@ export default function DashboardPage() {
   }
 
   if (!isInitialized) {
-    return <div className="p-8 flex items-center justify-center min-h-screen text-slate-500">Initializing Corri SDK...</div>;
+    return (
+      <div className="p-8 flex items-center justify-center min-h-screen text-slate-500">
+        Initializing Corri SDK...
+      </div>
+    );
   }
 
   return (
     <main className="min-h-screen bg-slate-50 p-8">
       <div className="max-w-4xl mx-auto space-y-6">
-        
         {/* Header preserving Wema brand color identity */}
         <header className="flex justify-between items-center pb-6 border-b border-slate-200">
           <h1 className="text-2xl font-bold text-slate-900">Wema Hackaholics - ALAT Demo</h1>
@@ -80,7 +83,6 @@ export default function DashboardPage() {
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          
           {/* Status Panel */}
           <section className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
             <h2 className="text-lg font-semibold mb-4 text-slate-800">Visit Status</h2>
@@ -91,7 +93,7 @@ export default function DashboardPage() {
               </div>
               <div className="flex justify-between items-center pb-2 border-b border-slate-50">
                 <span className="text-slate-500">Visit State:</span>
-                <span className={`font-medium ${isVisiting ? 'text-green-600' : 'text-slate-600'}`}>
+                <span className={`font-medium ${isVisiting ? "text-green-600" : "text-slate-600"}`}>
                   {isVisiting ? "In Progress" : "Waiting"}
                 </span>
               </div>
@@ -108,24 +110,24 @@ export default function DashboardPage() {
           <section className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
             <h2 className="text-lg font-semibold mb-4 text-slate-800">Demo Controls</h2>
             <div className="space-y-3">
-              <button 
+              <button
                 onClick={handleStartMonitoring}
                 className="w-full bg-slate-800 text-white py-2.5 rounded-lg hover:bg-slate-700 transition shadow-sm font-medium"
               >
                 1. Sync & Start Monitoring
               </button>
-              
-              <button 
+
+              <button
                 onClick={handleTriggerApproach}
                 disabled={isVisiting || !!activeBranchName}
                 className="w-full bg-wema-purple text-white py-2.5 rounded-lg hover:bg-opacity-90 transition shadow-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 2. Trigger Approach (Marina)
               </button>
-              
+
               {/* Temporary bypass button for the hackathon UI flow */}
               {activeBranchName && !isVisiting && (
-                <button 
+                <button
                   onClick={handleConfirmVisit}
                   className="w-full bg-green-600 text-white py-2.5 rounded-lg hover:bg-green-700 transition shadow-sm font-medium"
                 >
@@ -133,7 +135,7 @@ export default function DashboardPage() {
                 </button>
               )}
 
-              <button 
+              <button
                 onClick={handleStableExit}
                 disabled={!isVisiting}
                 className="w-full border-2 border-slate-200 text-slate-700 py-2.5 rounded-lg hover:bg-slate-50 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"

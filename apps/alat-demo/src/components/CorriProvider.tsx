@@ -34,7 +34,8 @@ export function CorriProvider({ children }: { children: React.ReactNode }) {
         const publicAppKey = process.env.NEXT_PUBLIC_CORRI_APP_KEY || "demo-app-key";
         const receiverKeyId = process.env.NEXT_PUBLIC_RECEIVER_KEY_ID || "receiver-test-key";
         const receiverPublicKeyPem = process.env.NEXT_PUBLIC_RECEIVER_PUBLIC_KEY || "";
-        const configSigningKeyId = process.env.NEXT_PUBLIC_CONFIG_SIGNING_KEY_ID || "wema-test-config-key";
+        const configSigningKeyId =
+          process.env.NEXT_PUBLIC_CONFIG_SIGNING_KEY_ID || "wema-test-config-key";
         const configSigningPublicKeyPem = process.env.NEXT_PUBLIC_CONFIG_SIGNING_PUBLIC_KEY || "";
 
         const transport = new FetchCorriTransport({

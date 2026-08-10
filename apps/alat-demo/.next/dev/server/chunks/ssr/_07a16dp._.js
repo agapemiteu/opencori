@@ -22,12 +22,12 @@ function RootLayout({ children }) {
             children: children
         }, void 0, false, {
             fileName: "[project]/apps/alat-demo/src/app/layout.tsx",
-            lineNumber: 16,
+            lineNumber: 12,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/apps/alat-demo/src/app/layout.tsx",
-        lineNumber: 15,
+        lineNumber: 11,
         columnNumber: 5
     }, this);
 }
