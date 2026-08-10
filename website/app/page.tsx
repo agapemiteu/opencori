@@ -2,116 +2,391 @@
 
 import { useMemo, useState } from 'react';
 
-type Tab = 'overview' | 'registry' | 'simulation' | 'delivery' | 'receiver' | 'privacy';
-type Flow = 'idle' | 'approach' | 'prompt' | 'visit' | 'compose' | 'sending' | 'delivered' | 'complete';
+type Scenario = 'happy' | 'passing' | 'permission' | 'offline' | 'destination' | 'reentry' | 'duplicate';
+type Flow = 'home' | 'permission' | 'approach' | 'prompt' | 'visit' | 'support' | 'sending' | 'queued' | 'sent' | 'complete' | 'passing';
+
+type EventRow = { label: string; detail: string; tone?: 'ok' | 'warn' | 'muted' };
+
+const scenarios: { id: Scenario; name: string; caption: string }[] = [
+  { id: 'happy', name: 'Normal branch visit', caption: 'Confirmed visit, support request, delivery, stable exit.' },
+  { id: 'passing', name: 'Customer is passing by', caption: 'No visit is created and the branch enters cooldown.' },
+  { id: 'permission', name: 'Location permission denied', caption: 'ALAT keeps working. Branch-aware assistance stays off.' },
+  { id: 'offline', name: 'Customer loses internet', caption: 'Encrypted request is queued and resumes when connectivity returns.' },
+  { id: 'destination', name: 'Wema endpoint unavailable', caption: 'Customer sees a calm pending state while Corri retries underneath.' },
+  { id: 'reentry', name: 'Customer leaves and re-enters', caption: 'Exit grace prevents a duplicate visit.' },
+  { id: 'duplicate', name: 'Customer taps send twice', caption: 'Idempotency produces one logical delivery and one receipt.' },
+];
 
 const branches = [
-  ['Marina Demo Branch','Lagos','Lagos Island','350m','250m','Verified demo'],
-  ['Ikeja Demo Branch','Lagos','Ikeja','350m','250m','Demo seed'],
-  ['Abuja CBD Demo Branch','FCT','Abuja','400m','290m','Demo seed'],
-  ['Kano Demo Branch','Kano','Kano','420m','300m','Demo seed'],
-  ['Kaduna Demo Branch','Kaduna','Kaduna','400m','290m','Demo seed'],
-  ['Ibadan Demo Branch','Oyo','Ibadan','380m','270m','Demo seed'],
-  ['Port Harcourt Demo Branch','Rivers','Port Harcourt','360m','260m','Demo seed'],
-  ['Enugu Demo Branch','Enugu','Enugu','380m','270m','Demo seed'],
+  ['Marina Demo Branch', 'Lagos', 'Lagos Island', '350 m', '250 m'],
+  ['Ikeja Demo Branch', 'Lagos', 'Ikeja', '350 m', '250 m'],
+  ['Abuja CBD Demo Branch', 'FCT', 'Abuja', '400 m', '290 m'],
+  ['Kano Demo Branch', 'Kano', 'Kano', '420 m', '300 m'],
+  ['Kaduna Demo Branch', 'Kaduna', 'Kaduna', '400 m', '290 m'],
+  ['Ibadan Demo Branch', 'Oyo', 'Ibadan', '380 m', '270 m'],
+  ['Port Harcourt Demo Branch', 'Rivers', 'Port Harcourt', '360 m', '260 m'],
+  ['Enugu Demo Branch', 'Enugu', 'Enugu', '380 m', '270 m'],
 ];
 
-const nav: [Tab,string][] = [
-  ['overview','Overview'],['registry','Branch registry'],['simulation','Simulation lab'],['delivery','Delivery'],['receiver','Wema receiver'],['privacy','Privacy & security']
-];
-
-function Icon({name}:{name:string}) {
-  const paths: Record<string,string> = {
-    overview:'M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z',
-    registry:'M12 21s6-5.3 6-11a6 6 0 1 0-12 0c0 5.7 6 11 6 11Zm0-8.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5Z',
-    simulation:'M8 2h8a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm2 3h4v1h-4V5Zm1 14h2v1h-2v-1Z',
-    delivery:'M3 11h13l-4-4 1.4-1.4L20 12l-6.6 6.4L12 17l4-4H3v-2Z',
-    receiver:'M3 5h18v14H3V5Zm2 2v1l7 4.5L19 8V7H5Zm14 10v-6.6l-7 4.4-7-4.4V17h14Z',
-    privacy:'M12 2 4 6v6c0 5 3.4 8.5 8 10 4.6-1.5 8-5 8-10V6l-8-4Zm-1 13-3-3 1.4-1.4L11 12.2l3.6-3.6L16 10l-5 5Z'
-  };
-  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d={paths[name]}/></svg>
+function timeLabel() {
+  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
-export default function Page(){
-  const [tab,setTab] = useState<Tab>('overview');
-  const [flow,setFlow] = useState<Flow>('idle');
-  const [message,setMessage] = useState('I visited the branch and still need help with an issue on my account.');
-  const [distance,setDistance] = useState(640);
-  const [elapsed,setElapsed] = useState(0);
-  const [cipher,setCipher] = useState('');
-  const [receipt,setReceipt] = useState('');
-  const [failNext,setFailNext] = useState(false);
-  const [events,setEvents] = useState<string[]>(['SDK ready · signed config verified','14 demo branch nodes synced']);
-  const [config,setConfig] = useState(17);
-  const title = nav.find(([k])=>k===tab)?.[1] || 'Overview';
-  const stateName = flow==='idle'?'MONITORING':flow==='approach'?'APPROACH':flow==='prompt'?'PROMPT_PENDING':flow==='visit'||flow==='compose'?'VISIT_ACTIVE':flow==='sending'?'DELIVERING':flow==='delivered'?'DELIVERED':'COMPLETED';
+export default function Page() {
+  const [scenario, setScenario] = useState<Scenario>('happy');
+  const [flow, setFlow] = useState<Flow>('home');
+  const [permission, setPermission] = useState<'granted' | 'denied' | 'unknown'>('granted');
+  const [online, setOnline] = useState(true);
+  const [message, setMessage] = useState('I came to the branch because my card has not been working.');
+  const [receipt, setReceipt] = useState('');
+  const [cipher, setCipher] = useState('');
+  const [reveal, setReveal] = useState(false);
+  const [visitActive, setVisitActive] = useState(false);
+  const [visitSeconds, setVisitSeconds] = useState(0);
+  const [events, setEvents] = useState<EventRow[]>([
+    { label: 'SDK_READY', detail: 'Embedded in ALAT · config verified', tone: 'ok' },
+    { label: 'NEARBY_CONFIG_SYNCED', detail: '5 nearby demo branches selected from registry', tone: 'muted' },
+  ]);
+  const [lastPlaintext, setLastPlaintext] = useState('');
+  const [sending, setSending] = useState(false);
 
-  const maskedCipher = useMemo(()=> cipher ? `${cipher.slice(0,120)}…` : 'No encrypted envelope yet.',[cipher]);
+  const selectedScenario = scenarios.find((item) => item.id === scenario) ?? scenarios[0];
+  const infrastructureState = useMemo(() => {
+    if (flow === 'permission') return 'PERMISSION_REQUIRED';
+    if (flow === 'approach') return 'APPROACH_CANDIDATE';
+    if (flow === 'prompt') return 'PROMPT_PENDING';
+    if (flow === 'visit' || flow === 'support') return 'VISIT_ACTIVE';
+    if (flow === 'sending') return 'DELIVERING';
+    if (flow === 'queued') return 'DELIVERY_QUEUED';
+    if (flow === 'sent') return visitActive ? 'VISIT_ACTIVE' : 'DELIVERED';
+    if (flow === 'complete') return 'COMPLETED';
+    if (flow === 'passing') return 'COOLDOWN';
+    return 'MONITORING';
+  }, [flow, visitActive]);
 
-  function addEvent(v:string){ setEvents(e=>[v,...e].slice(0,8)); }
-  function runApproach(){
-    setTab('simulation'); setFlow('approach'); setDistance(640); addEvent('Approach simulation started · Marina');
-    let d=640;
-    const id=setInterval(()=>{ d=Math.max(165,d-55); setDistance(d); if(d<=165){clearInterval(id);setFlow('prompt');addEvent('Branch prompt delivered · anonymous installation');}},210);
+  function addEvent(label: string, detail: string, tone: EventRow['tone'] = 'muted') {
+    setEvents((current) => [{ label, detail, tone }, ...current].slice(0, 12));
   }
-  function confirmVisit(){ setFlow('visit'); setElapsed(0); addEvent('Visit started · customer confirmed · confidence HIGH'); }
-  function advance(){ setElapsed(v=>v+23*60); addEvent('Presentation clock advanced +23m'); }
-  async function send(){
-    if(!message.trim()) return;
-    setFlow('sending'); addEvent('Host encrypting request · plaintext stays in ALAT');
-    const bytes = new TextEncoder().encode(message);
-    const digest = await crypto.subtle.digest('SHA-256',bytes);
-    const hash = Array.from(new Uint8Array(digest)).map(x=>x.toString(16).padStart(2,'0')).join('');
-    const pseudoCipher = btoa(unescape(encodeURIComponent(message))).split('').reverse().join('') + '.' + hash;
-    setCipher(pseudoCipher);
-    addEvent('Corri relay accepted ciphertext · route customer-care.general');
-    const response = await fetch('/api/relay',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({eventId:'evt_'+Date.now(),routeKey:'customer-care.general',branchId:'marina',ciphertext:pseudoCipher,failOnce:failNext})});
+
+  function reset(nextScenario: Scenario = scenario) {
+    setScenario(nextScenario);
+    setFlow('home');
+    setPermission(nextScenario === 'permission' ? 'unknown' : 'granted');
+    setOnline(nextScenario === 'offline' ? false : true);
+    setReceipt('');
+    setCipher('');
+    setReveal(false);
+    setVisitActive(false);
+    setVisitSeconds(0);
+    setLastPlaintext('');
+    setSending(false);
+    setMessage('I came to the branch because my card has not been working.');
+    setEvents([
+      { label: 'SDK_READY', detail: 'Embedded in ALAT · config verified', tone: 'ok' },
+      { label: 'SCENARIO_SELECTED', detail: scenarios.find((item) => item.id === nextScenario)?.name ?? 'Normal branch visit', tone: 'muted' },
+    ]);
+  }
+
+  function startJourney() {
+    if (scenario === 'permission' && permission !== 'granted') {
+      setFlow('permission');
+      addEvent('PERMISSION_REQUIRED', 'Background branch assistance unavailable until ALAT receives location permission', 'warn');
+      return;
+    }
+
+    setFlow('approach');
+    addEvent('APPROACH_CANDIDATE', 'branch=marina · confidence=MEDIUM · anonymous installation', 'muted');
+    window.setTimeout(() => {
+      setFlow('prompt');
+      addEvent('ALAT_PROMPT_REQUESTED', 'Host app chooses its own Wema-branded notification', 'ok');
+    }, 900);
+  }
+
+  function allowLocation() {
+    setPermission('granted');
+    addEvent('PERMISSION_CHANGED', 'location=granted · branch awareness available', 'ok');
+    setFlow('home');
+  }
+
+  function denyLocation() {
+    setPermission('denied');
+    addEvent('PERMISSION_CHANGED', 'location=denied · ALAT core banking unaffected', 'warn');
+    setFlow('home');
+  }
+
+  function confirmVisit() {
+    setFlow('visit');
+    setVisitActive(true);
+    setVisitSeconds(0);
+    addEvent('VISIT_STARTED', 'startSource=CUSTOMER_CONFIRMED · branch=marina · confidence=HIGH', 'ok');
+  }
+
+  function declineVisit() {
+    setFlow('passing');
+    setVisitActive(false);
+    addEvent('PROMPT_DECLINED', 'outcome=NOT_VISITING · branch-specific cooldown applied', 'muted');
+  }
+
+  function openSupport() {
+    setFlow('support');
+    addEvent('HOST_SUPPORT_OPENED', 'ALAT-owned support UI · Corri receives no plaintext', 'muted');
+  }
+
+  async function makeCipher(text: string) {
+    const encoded = new TextEncoder().encode(text);
+    const digest = await crypto.subtle.digest('SHA-256', encoded);
+    const hash = Array.from(new Uint8Array(digest)).map((value) => value.toString(16).padStart(2, '0')).join('');
+    return `${btoa(unescape(encodeURIComponent(text))).split('').reverse().join('')}.${hash}`;
+  }
+
+  async function deliver(singleLogicalRequest = true) {
+    if (sending || !message.trim()) return;
+    setSending(true);
+    setLastPlaintext(message);
+    setFlow('sending');
+    addEvent('HOST_ENCRYPTING', 'Plaintext remains inside the Wema-owned ALAT experience', 'muted');
+
+    const encrypted = await makeCipher(message);
+    setCipher(encrypted);
+    addEvent('DELIVERY_ACCEPTED', 'route=customer-care.general · ciphertext only', 'ok');
+
+    if (!online || scenario === 'offline') {
+      setFlow('queued');
+      addEvent('DELIVERY_QUEUED', 'No connectivity · encrypted envelope retained for retry', 'warn');
+      setSending(false);
+      return;
+    }
+
+    const eventId = scenario === 'duplicate' ? 'evt_demo_idempotent' : `evt_${Date.now()}`;
+    const response = await fetch('/api/relay', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        eventId,
+        routeKey: 'customer-care.general',
+        branchId: 'marina',
+        ciphertext: encrypted,
+        failOnce: scenario === 'destination',
+      }),
+    });
     const data = await response.json();
-    setReceipt(data.receipt || 'WEMA-DEMO-'+Math.floor(10000+Math.random()*90000));
-    if(data.retried) addEvent('Primary delivery failed once · retry succeeded');
-    addEvent(`Delivered to Wema-owned receiver · ${data.latencyMs ?? 224}ms`);
-    setFailNext(false); setFlow('delivered');
+    const nextReceipt = data.receipt || `WEMA-DEMO-${Math.floor(10000 + Math.random() * 90000)}`;
+    setReceipt(nextReceipt);
+
+    if (data.retried || scenario === 'destination') {
+      addEvent('DELIVERY_RETRY', 'Primary Wema destination unavailable once · retry completed', 'warn');
+    }
+    if (scenario === 'duplicate' && singleLogicalRequest) {
+      addEvent('IDEMPOTENCY_HIT', 'Duplicate submit mapped to the same logical event', 'ok');
+    }
+
+    addEvent('DELIVERY_COMPLETED', `receipt=${nextReceipt} · receiver=Wema`, 'ok');
+    setFlow('sent');
+    setSending(false);
   }
-  function complete(){ setFlow('complete'); addEvent(`Visit completed · ${Math.floor(elapsed/60)}m ${elapsed%60}s · HIGH confidence`); }
-  function reset(){ setFlow('idle');setDistance(640);setElapsed(0);setCipher('');setReceipt('');setMessage('I visited the branch and still need help with an issue on my account.');addEvent('Scenario reset'); }
 
-  return <main className="shell">
-    <aside className="sidebar">
-      <div className="brand"><div className="brandMark">c</div><div><strong>corri</strong><span>physical context infrastructure</span></div></div>
-      <nav>{nav.map(([key,label])=><button key={key} onClick={()=>setTab(key)} className={tab===key?'active':''}><Icon name={key}/><span>{label}</span></button>)}</nav>
-      <div className="tenant"><div className="tenantAvatar">WB</div><div><b>Wema Bank</b><span>ALAT Demo · Nigeria</span></div></div>
-    </aside>
-    <section className="workspace">
-      <header className="topbar"><div><span className="crumb">WEMA BANK / ALAT DEMO</span><h1>{title}</h1></div><div className="topRight"><span className="health"><i/>Hackathon sandbox</span><button className="secondary" onClick={reset}>Reset</button><button className="primary" onClick={runApproach}>Run live demo</button></div></header>
-      <div className="content">
-        {tab==='overview' && <>
-          <section className="hero panel"><div className="eyebrow">CORRI INFRASTRUCTURE</div><h2>Software that understands the physical moment.</h2><p>Corri gives existing mobile apps a privacy-first layer for branch awareness, confirmed visit timing and secure delivery. It never needs customer accounts, credentials, transactions or readable support messages.</p><div className="flowline"><span>Approach</span><b>→</b><span>Confirm</span><b>→</b><span>Visit</span><b>→</b><span>Encrypt</span><b>→</b><span>Deliver</span></div><button className="lightCta" onClick={runApproach}>Experience Corri in ALAT →</button></section>
-          <section className="metrics"><div className="metric panel"><span>Demo branch nodes</span><b>14</b><small>Multi-state registry</small></div><div className="metric panel"><span>Confirmed visits</span><b>1,284</b><small>Privacy-safe demo data</small></div><div className="metric panel"><span>Median presence</span><b>24m</b><small>Confidence filtered</small></div><div className="metric panel"><span>Delivery success</span><b>99.94%</b><small>P50 236ms</small></div></section>
-          <section className="twoCol"><div className="panel pad"><div className="panelHead"><div><span className="eyebrow dark">LIVE SYSTEM</span><h3>Infrastructure event trace</h3></div><span className="status green">HEALTHY</span></div><div className="timeline">{events.map((e,i)=><div key={i}><i/><span>{e}</span><time>{i===0?'now':`${i*2}m`}</time></div>)}</div></div><div className="panel pad"><div className="panelHead"><div><span className="eyebrow dark">TRUST BOUNDARY</span><h3>Corri intentionally sees less.</h3></div></div><div className="zeros"><div><b>0</b><span>customer identity fields</span></div><div><b>0</b><span>banking credential fields</span></div><div><b>0</b><span>readable complaint fields</span></div></div></div></section>
-        </>}
+  async function restoreConnection() {
+    setOnline(true);
+    addEvent('CONNECTIVITY_RESTORED', 'Queued envelope eligible for delivery', 'ok');
+    setSending(false);
+    const currentScenario = scenario;
+    setScenario('happy');
+    await deliver(false);
+    setScenario(currentScenario);
+  }
 
-        {tab==='registry' && <section className="panel pad"><div className="panelHead"><div><span className="eyebrow dark">SIGNED CONFIGURATION</span><h3>Wema branch registry</h3><p>Production locations must come from bank-approved sources. These are representative demo nodes.</p></div><div className="actions"><span className="status purple">cfg_wema_{String(config).padStart(3,'0')}</span><button className="secondary" onClick={()=>{setConfig(v=>v+1);addEvent('Signed configuration published')}}>Publish config</button></div></div><div className="registryMap"><div className="mapPulse p1"/><div className="mapPulse p2"/><div className="mapPulse p3"/><div className="mapPulse p4"/><div className="mapPulse p5"/><span>NIGERIA · DYNAMIC NEARBY SUBSET</span></div><div className="table"><div className="tr th"><span>Branch</span><span>State</span><span>City</span><span>Approach</span><span>Exit</span><span>Source</span></div>{branches.map((r,i)=><div className="tr" key={i}>{r.map((c,j)=><span key={j}>{j===0?<b>{c}</b>:c}</span>)}</div>)}</div></section>}
+  function leaveBranch() {
+    if (scenario === 'reentry') {
+      addEvent('EXIT_CANDIDATE', 'Outside exit radius · grace timer started', 'muted');
+      window.setTimeout(() => {
+        addEvent('REENTRY_DETECTED', 'Customer returned during grace period · same visit continues', 'ok');
+        setFlow('visit');
+      }, 650);
+      setFlow('approach');
+      return;
+    }
+    setVisitSeconds((current) => Math.max(current, 23 * 60 + 14));
+    setVisitActive(false);
+    setFlow('complete');
+    addEvent('VISIT_COMPLETED', 'stable exit · duration=23m14s · confidence=HIGH', 'ok');
+  }
 
-        {tab==='simulation' && <section className="simGrid">
-          <div className="phoneFrame"><div className="phone"><div className="notch"/><div className="phoneTop"><b>9:41</b><span>ALAT · DEMO HOST</span><b>100%</b></div><div className="phoneBody">
-            {flow==='idle' && <div className="mobilePage"><div className="alatLogo">ALAT</div><div className="balanceCard"><span>Available balance · intentionally masked</span><b>₦••••••</b><small>Corri receives no banking data.</small></div><div className="assistCard"><div className="pin">⌖</div><div><b>Branch Assistance is on</b><p>Corri can detect Wema demo zones with your consent.</p></div></div><button className="phonePrimary" onClick={runApproach}>Simulate branch approach</button></div>}
-            {flow==='approach' && <div className="mobilePage"><div className="alatLogo">ALAT</div><div className="radar"><div className="ring r1"/><div className="ring r2"/><div className="ring r3"/><i/><div className="distance"><span>Wema Marina demo zone</span><b>{distance} m</b></div></div><div className="signalStrip"><span>Corri state</span><b>APPROACH_CANDIDATE</b></div></div>}
-            {flow==='prompt' && <div className="mobilePage"><div className="alatLogo">ALAT</div><div className="radar dim"><div className="ring r1"/><div className="ring r2"/><i/></div><div className="notification"><div className="noticeHead"><strong>ALAT</strong><span>Branch assistance</span></div><h3>You are near Wema Marina.</h3><p>Are you visiting this branch today?</p><button className="phonePrimary" onClick={confirmVisit}>Yes, I am visiting</button><button className="phoneSecondary" onClick={()=>{setFlow('idle');addEvent('Prompt dismissed · NOT_NOW cooldown')}}>Not now</button></div></div>}
-            {(flow==='visit') && <div className="mobilePage centered"><span className="miniLabel">CONFIRMED BRANCH VISIT</span><h2>Wema Marina</h2><div className="timerRing"><div><b>{String(Math.floor(elapsed/60)).padStart(2,'0')}:{String(elapsed%60).padStart(2,'0')}</b><span>confirmed presence</span></div></div><div className="privacyCard"><b>Corri holds visit metadata only</b><span>No account, transaction, credential or readable complaint data.</span></div><button className="phonePrimary" onClick={()=>setFlow('compose')}>Ask Wema for help</button><button className="phoneSecondary" onClick={advance}>Advance visit by 23 minutes</button><button className="phoneGhost" onClick={complete}>I have left the branch</button></div>}
-            {flow==='compose' && <div className="mobilePage"><span className="miniLabel">WEMA-OWNED EXPERIENCE</span><h2>What do you need help with?</h2><p className="mobileCopy">Your message is encrypted inside the host application before Corri receives anything.</p><textarea value={message} onChange={e=>setMessage(e.target.value)}/><div className="routeBox"><span>Route</span><b>customer-care.general</b></div><button className="phonePrimary" onClick={send}>Encrypt & send to Wema</button><button className="phoneGhost" onClick={()=>setFlow('visit')}>Back</button></div>}
-            {flow==='sending' && <div className="mobilePage centered"><div className="loader"/><span className="miniLabel">SECURE DELIVERY</span><h2>Routing ciphertext</h2><p className="mobileCopy">Corri can deliver this envelope, but cannot read it.</p><div className="steps"><span>✓ Encrypted inside ALAT</span><span>✓ Accepted by Corri relay</span><span>• Delivering to Wema</span></div></div>}
-            {flow==='delivered' && <div className="mobilePage centered"><div className="successMark">✓</div><span className="miniLabel">DELIVERED</span><h2>Wema received your request.</h2><div className="receipt"><span>Receipt</span><b>{receipt}</b></div><button className="phonePrimary" onClick={()=>setFlow('visit')}>Return to active visit</button></div>}
-            {flow==='complete' && <div className="mobilePage centered"><div className="successMark">✓</div><span className="miniLabel">VISIT COMPLETE</span><h2>Branch visit recorded.</h2><div className="receipt"><span>Confirmed presence</span><b>{Math.floor(elapsed/60)}m {elapsed%60}s</b><span>Confidence</span><b>HIGH</b></div><button className="phonePrimary" onClick={reset}>Run again</button></div>}
-          </div></div></div>
-          <div className="simSide"><div className="panel pad"><div className="panelHead"><div><span className="eyebrow dark">STATE MACHINE</span><h3>{stateName}</h3></div><span className="status purple">LIVE</span></div><div className="stateRail">{['MONITORING','APPROACH','PROMPT','VISIT','DELIVERY','COMPLETE'].map((s,i)=><div key={s} className={(i <= ['idle','approach','prompt','visit','compose','sending','delivered','complete'].indexOf(flow)/1.5)?'done':''}><i/><span>{s}</span></div>)}</div></div><div className="panel pad"><div className="panelHead"><div><span className="eyebrow dark">EVENT TRACE</span><h3>Privacy-safe telemetry</h3></div></div><div className="timeline">{events.map((e,i)=><div key={i}><i/><span>{e}</span><time>{i===0?'now':`${i*2}m`}</time></div>)}</div></div><div className="panel pad"><div className="panelHead"><div><span className="eyebrow dark">ENCRYPTED ENVELOPE</span><h3>What Corri can see</h3></div></div><pre>{maskedCipher}</pre><button className="secondary" onClick={()=>{setFailNext(true);addEvent('Failure injection armed for next delivery')}}>Fail next delivery once</button></div></div>
-        </section>}
+  return (
+    <main className="demoShell">
+      <header className="presenterHeader">
+        <div>
+          <span className="overline">WEMA HACKAHOLICS · DIGITAL TRANSFORMATION</span>
+          <h1>ALAT branch experience</h1>
+          <p>The customer uses ALAT exactly as before. The new capability is embedded underneath.</p>
+        </div>
+        <div className="headerActions">
+          <span className="sandboxPill"><i /> Live demo</span>
+          <button className="ghostButton" onClick={() => reset()}>Reset</button>
+          <button className="darkButton" onClick={() => setReveal((value) => !value)}>{reveal ? 'Hide infrastructure' : 'Reveal infrastructure'}</button>
+        </div>
+      </header>
 
-        {tab==='delivery' && <section className="twoCol"><div className="panel pad"><div className="panelHead"><div><span className="eyebrow dark">ROUTE MAP</span><h3>Organisation-owned destinations</h3></div><span className="status green">HEALTHY</span></div><div className="routeRow"><div><span>Route key</span><b>customer-care.general</b></div><strong>→</strong><div><span>Destination</span><b>Wema Support Webhook</b></div></div><div className="routeRow"><div><span>Route key</span><b>branch-support.general</b></div><strong>→</strong><div><span>Destination</span><b>Wema Branch Ops</b></div></div></div><div className="panel pad"><div className="panelHead"><div><span className="eyebrow dark">RELIABILITY</span><h3>Delivery controls</h3></div></div><div className="bigStat"><b>99.94%</b><span>demo delivery success</span></div><button className="secondary" onClick={()=>setFailNext(true)}>Fail next delivery once</button></div></section>}
+      <section className="demoStage">
+        <aside className="scenarioPanel">
+          <div className="panelLabel">Presenter controls</div>
+          <h2>Real customer scenarios</h2>
+          <p>These controls are outside ALAT and exist only for judging.</p>
+          <div className="scenarioList">
+            {scenarios.map((item) => (
+              <button
+                key={item.id}
+                className={scenario === item.id ? 'scenario active' : 'scenario'}
+                onClick={() => reset(item.id)}
+              >
+                <span className="radioDot" />
+                <span><b>{item.name}</b><small>{item.caption}</small></span>
+              </button>
+            ))}
+          </div>
+          <div className="presenterCard">
+            <span>Selected scenario</span>
+            <b>{selectedScenario.name}</b>
+            <p>{selectedScenario.caption}</p>
+          </div>
+          <button className="runButton" onClick={startJourney}>Run this journey</button>
+          {flow === 'queued' && <button className="recoveryButton" onClick={restoreConnection}>Presenter: restore connection</button>}
+          {visitActive && <button className="recoveryButton" onClick={() => setVisitSeconds((value) => value + 23 * 60)}>Presenter: advance 23 minutes</button>}
+        </aside>
 
-        {tab==='receiver' && <section className="receiver panel"><div className="receiverBand"><span>MOCK WEMA INFRASTRUCTURE</span><h2>Support Event Receiver</h2></div><div className="receiverBody"><div className="panelHead"><div><span className="eyebrow dark">DECRYPTED REQUEST</span><h3>Plaintext exists only on the bank side.</h3></div><span className={`status ${receipt?'green':'purple'}`}>{receipt?'RECEIVED':'WAITING'}</span></div><div className="messageBox">{receipt?message:'No customer request received yet. Run the simulation and submit a request from the ALAT host.'}</div><div className="receiverMeta"><div><span>Receiver reference</span><b>{receipt||'—'}</b></div><div><span>Branch</span><b>{receipt?'Wema Marina Demo':'—'}</b></div><div><span>Route key</span><b>{receipt?'customer-care.general':'—'}</b></div><div><span>Signature</span><b>{receipt?'Verified':'—'}</b></div></div></div></section>}
+        <section className="customerStage">
+          <div className="stageHeader">
+            <div><span className="panelLabel">Customer view</span><h2>What the customer actually sees</h2></div>
+            <span className="customerRule">No Corri branding · no new app · no new account</span>
+          </div>
 
-        {tab==='privacy' && <><section className="trustFlow"><div className="panel pad"><span className="eyebrow dark">HOST APP</span><h3>ALAT owns customer context.</h3><p>Identity, account context, request UI, route selection and encryption remain inside the bank-owned experience.</p></div><strong>→</strong><div className="panel pad accent"><span className="eyebrow">CORRI</span><h3>Corri owns physical context.</h3><p>Anonymous visit metadata, branch policies, ciphertext delivery, retries and receipts.</p></div><strong>→</strong><div className="panel pad"><span className="eyebrow dark">BANK RECEIVER</span><h3>Wema owns decryption.</h3><p>Private keys, support workflow, account access and every banking decision stay with the bank.</p></div></section><section className="metrics privacyMetrics"><div className="metric panel"><span>Customer identities</span><b>0</b></div><div className="metric panel"><span>Bank credentials</span><b>0</b></div><div className="metric panel"><span>Transactions</span><b>0</b></div><div className="metric panel"><span>Readable complaints</span><b>0</b></div></section></>}
-      </div>
-    </section>
-  </main>
+          <div className="phoneWrap">
+            <div className="device">
+              <div className="deviceNotch" />
+              <div className="statusBar"><b>9:41</b><span>● ● ●</span><b>100%</b></div>
+              <div className="alatHeader">
+                <div className="alatBrand">ALAT</div>
+                <div className="alatHeaderActions"><span>⌕</span><span>◌</span></div>
+              </div>
+              <div className="screen">
+                {(flow === 'home' || flow === 'approach' || flow === 'prompt' || flow === 'passing') && (
+                  <div className="homeScreen">
+                    <div className="helloRow"><div><span>Good evening</span><b>Welcome back</b></div><div className="profileOrb">AM</div></div>
+                    <div className="accountCard"><span>Available balance</span><strong>₦••••••</strong><small>Tap to reveal balance</small></div>
+                    <div className="quickActions">
+                      <div><i>↗</i><span>Send</span></div><div><i>▦</i><span>Bills</span></div><div><i>◫</i><span>Cards</span></div><div><i>•••</i><span>More</span></div>
+                    </div>
+                    <div className="activityCard"><div className="activityHead"><b>Recent activity</b><span>See all</span></div><div className="activityItem"><i>↙</i><div><b>Transfer received</b><span>Today · 4:18 PM</span></div><strong>+₦••••</strong></div><div className="activityItem"><i>▣</i><div><b>Card payment</b><span>Yesterday · 6:42 PM</span></div><strong>-₦••••</strong></div></div>
+
+                    {flow === 'approach' && <div className="notificationToast"><div className="notifIcon">A</div><div><b>ALAT</b><span>Checking nearby Wema services…</span></div></div>}
+                    {flow === 'prompt' && <div className="notificationToast interactive"><div className="notifIcon">A</div><div className="notifCopy"><b>Visiting Wema Marina?</b><span>We can make it easier to get help during your visit.</span></div><button onClick={confirmVisit}>Open</button></div>}
+                    {flow === 'passing' && <div className="softMessage"><b>No problem.</b><span>ALAT will not treat this as a branch visit.</span></div>}
+                    {flow === 'prompt' && <div className="bottomSheet"><div className="sheetHandle"/><span className="sheetEyebrow">WEMA MARINA</span><h3>Are you visiting this branch?</h3><p>This lets ALAT give you relevant help while you are here.</p><button className="phonePrimary" onClick={confirmVisit}>Yes, I’m here</button><button className="phoneSecondary" onClick={declineVisit}>I’m not visiting</button><button className="phoneText" onClick={() => setFlow('home')}>Not now</button></div>}
+                  </div>
+                )}
+
+                {flow === 'permission' && (
+                  <div className="permissionScreen">
+                    <div className="alatBrand big">ALAT</div>
+                    <div className="permissionIllustration"><span>⌖</span></div>
+                    <h2>Get help when you visit a Wema branch</h2>
+                    <p>Allow ALAT to recognise when you are near a Wema branch so we can make branch visits easier.</p>
+                    <button className="phonePrimary" onClick={allowLocation}>Allow location</button>
+                    <button className="phoneSecondary" onClick={denyLocation}>Not now</button>
+                    <small>ALAT banking continues to work if you choose not to allow this.</small>
+                  </div>
+                )}
+
+                {flow === 'visit' && (
+                  <div className="homeScreen">
+                    <div className="helloRow"><div><span>Good evening</span><b>Welcome back</b></div><div className="profileOrb">AM</div></div>
+                    <div className="accountCard"><span>Available balance</span><strong>₦••••••</strong><small>Tap to reveal balance</small></div>
+                    <div className="visitContext"><div className="branchIcon">W</div><div><span>Wema Marina</span><b>Need help while you’re here?</b><small>Use Wema Support without leaving ALAT.</small></div><button onClick={openSupport}>Get help</button></div>
+                    <div className="quickActions"><div><i>↗</i><span>Send</span></div><div><i>▦</i><span>Bills</span></div><div><i>◫</i><span>Cards</span></div><div><i>•••</i><span>More</span></div></div>
+                    <button className="leaveLink" onClick={leaveBranch}>Presenter: simulate leaving branch</button>
+                  </div>
+                )}
+
+                {flow === 'support' && (
+                  <div className="supportScreen">
+                    <div className="screenNav"><button onClick={() => setFlow('visit')}>‹</button><b>Wema Support</b><span>⋮</span></div>
+                    <div className="supportIntro"><div className="supportIcon">W</div><div><span>Wema Marina</span><h2>How can we help?</h2><p>Tell us what happened. Your request will go to Wema Support.</p></div></div>
+                    <label>Message</label>
+                    <textarea value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Describe what you need help with" />
+                    <div className="supportNote">Your branch context is attached automatically. You do not need to repeat where you are.</div>
+                    <button className="phonePrimary" disabled={!message.trim() || sending} onClick={() => deliver(true)}>Send to Wema Support</button>
+                    {scenario === 'duplicate' && <button className="phoneSecondary" disabled={!message.trim() || sending} onClick={() => deliver(true)}>Demo: tap send again</button>}
+                  </div>
+                )}
+
+                {flow === 'sending' && (
+                  <div className="resultScreen"><div className="spinner"/><h2>Sending your request…</h2><p>You can keep using ALAT while we securely send this to Wema Support.</p></div>
+                )}
+
+                {flow === 'queued' && (
+                  <div className="resultScreen"><div className="pendingMark">↻</div><h2>Your request is saved.</h2><p>We’ll send it automatically when your connection is back. You do not need to submit again.</p><div className="pendingCard"><b>Wema Marina</b><span>Waiting for connection</span></div><button className="phonePrimary" onClick={() => setFlow('home')}>Continue using ALAT</button></div>
+                )}
+
+                {flow === 'sent' && (
+                  <div className="resultScreen"><div className="successMark">✓</div><h2>Wema received your request.</h2><p>Wema Support can continue from here. You can keep using ALAT normally.</p><div className="pendingCard"><span>Reference</span><b>{receipt}</b></div><button className="phonePrimary" onClick={() => setFlow('visit')}>Done</button></div>
+                )}
+
+                {flow === 'complete' && (
+                  <div className="homeScreen">
+                    <div className="helloRow"><div><span>Good evening</span><b>Welcome back</b></div><div className="profileOrb">AM</div></div>
+                    <div className="accountCard"><span>Available balance</span><strong>₦••••••</strong><small>Tap to reveal balance</small></div>
+                    <div className="feedbackCard"><span>Wema Marina</span><b>How was your visit?</b><p>Your feedback helps us improve the branch experience.</p><div><button>Good</button><button>Okay</button><button>Not good</button></div></div>
+                    <div className="quickActions"><div><i>↗</i><span>Send</span></div><div><i>▦</i><span>Bills</span></div><div><i>◫</i><span>Cards</span></div><div><i>•••</i><span>More</span></div></div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section className={reveal ? 'infraReveal open' : 'infraReveal'}>
+        <div className="infraHeader">
+          <div><span className="overline">JUDGE / ENGINEERING VIEW · NOT CUSTOMER-FACING</span><h2>What was running underneath ALAT</h2><p>Corri is embedded infrastructure. This surface exists for integration, operations and judging, never for the banking customer.</p></div>
+          <div className="corriMark"><span>c</span><div><b>corri</b><small>embedded physical-context SDK</small></div></div>
+        </div>
+
+        <div className="infraGrid">
+          <div className="infraCard stateCard">
+            <div className="cardTitle"><span>State machine</span><b>{infrastructureState}</b></div>
+            <div className="stateRail">
+              {['MONITORING','APPROACH','PROMPT','VISIT','DELIVERY','COMPLETED'].map((state) => {
+                const active = infrastructureState.includes(state) || (state === 'VISIT' && infrastructureState === 'VISIT_ACTIVE') || (state === 'DELIVERY' && ['DELIVERING','DELIVERY_QUEUED','DELIVERED'].includes(infrastructureState));
+                return <div className={active ? 'active' : ''} key={state}><i />{state}</div>;
+              })}
+            </div>
+            <div className="eventLog">
+              {events.map((event, index) => <div key={`${event.label}-${index}`}><time>{index === 0 ? timeLabel() : 'earlier'}</time><span className={event.tone ?? 'muted'}>{event.label}</span><p>{event.detail}</p></div>)}
+            </div>
+          </div>
+
+          <div className="infraCard privacyCard">
+            <div className="cardTitle"><span>Privacy boundary</span><b>CONTENT BLIND</b></div>
+            <div className="zeroGrid"><div><strong>0</strong><span>customer identity fields</span></div><div><strong>0</strong><span>account / BVN fields</span></div><div><strong>0</strong><span>transaction fields</span></div><div><strong>0</strong><span>bank credentials</span></div><div><strong>0</strong><span>readable complaint fields</span></div></div>
+            <div className="boundaryFlow"><div><b>ALAT</b><span>Owns customer + plaintext</span></div><i>→</i><div className="corriBoundary"><b>Corri</b><span>Metadata + ciphertext</span></div><i>→</i><div><b>Wema receiver</b><span>Owns decryption + action</span></div></div>
+          </div>
+
+          <div className="infraCard envelopeCard">
+            <div className="cardTitle"><span>Content-blind envelope</span><b>{cipher ? 'AVAILABLE' : 'WAITING'}</b></div>
+            <pre>{cipher ? JSON.stringify({ branchId:'marina', routeKey:'customer-care.general', ciphertext:`${cipher.slice(0,72)}…`, plaintextVisibleToCorri:false }, null, 2) : '{\n  "waiting_for_request": true\n}'}</pre>
+          </div>
+
+          <div className="infraCard receiverCard">
+            <div className="cardTitle"><span>Wema-owned receiver</span><b>{receipt ? 'RECEIVED' : 'WAITING'}</b></div>
+            <div className="receiverMessage">{lastPlaintext || 'No customer request has reached the Wema receiver yet.'}</div>
+            <div className="receiverMeta"><div><span>Reference</span><b>{receipt || '—'}</b></div><div><span>Signature</span><b>{receipt ? 'Verified' : '—'}</b></div><div><span>Branch</span><b>{receipt ? 'Wema Marina' : '—'}</b></div></div>
+          </div>
+
+          <div className="infraCard registryCard">
+            <div className="cardTitle"><span>Bank-approved branch registry</span><b>{branches.length} DEMO NODES</b></div>
+            <div className="branchTable"><div className="branchRow head"><span>Branch</span><span>State</span><span>City</span><span>Approach</span><span>Exit</span></div>{branches.map((branch) => <div className="branchRow" key={branch[0]}>{branch.map((value) => <span key={value}>{value}</span>)}</div>)}</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
 }
