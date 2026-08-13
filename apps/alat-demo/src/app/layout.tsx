@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./global.css";
+import { CorriProvider } from "../components/CorriProvider";
 
 export const metadata: Metadata = {
   title: "Wema ALAT Corri Demo",
@@ -9,7 +10,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <CorriProvider>{children}</CorriProvider>
+      </body>
     </html>
   );
 }

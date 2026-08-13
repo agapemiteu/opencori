@@ -6,14 +6,14 @@ import {
   type DeliveryReceipt,
 } from "@corri/sdk";
 
-export { encryptRequestWithWebCrypto, type AlatBrowserCryptoProvider } from "./browser-crypto.js";
+export { encryptRequestWithWebCrypto, type AlatBrowserCryptoProvider } from "./browser-crypto";
 export {
   AlatDemoBootstrapError,
   loadAlatDemoBrowserBootstrap,
   type AlatBrowserRuntimeCrypto,
   type AlatDemoBrowserBootstrap,
   type LoadAlatDemoBrowserBootstrapInput,
-} from "./browser.js";
+} from "./browser";
 
 export const ALAT_DEMO_INTEGRATION_LABEL = "ALAT demonstration with Corri SDK integrated";
 

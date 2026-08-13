@@ -1,8 +1,9 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { encryptRequestWithWebCrypto } from "../browser-crypto";
 import { FetchCorriTransport } from "@corri/sdk";
-import { createAlatDemoHost, type AlatDemoHost } from "../index.js";
+import { createAlatDemoHost, type AlatDemoHost } from "../index";
 
 interface CorriContextType {
   host: AlatDemoHost | null;
@@ -21,6 +22,7 @@ const CorriContext = createContext<CorriContextType>({
 });
 
 export function CorriProvider({ children }: { children: React.ReactNode }) {
+  console.log("CorriProvider component is rendering!");
   const [host, setHost] = useState<AlatDemoHost | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [activeBranchName, setActiveBranchName] = useState<string | null>(null);
@@ -30,6 +32,7 @@ export function CorriProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     async function init() {
       try {
+        console.log("1. Starting SDK init...");
         const apiBaseUrl = process.env.NEXT_PUBLIC_CORRI_API_BASE_URL || "http://localhost:3000";
         const publicAppKey = process.env.NEXT_PUBLIC_CORRI_APP_KEY || "demo-app-key";
         const receiverKeyId = process.env.NEXT_PUBLIC_RECEIVER_KEY_ID || "receiver-test-key";
@@ -38,27 +41,30 @@ export function CorriProvider({ children }: { children: React.ReactNode }) {
           process.env.NEXT_PUBLIC_CONFIG_SIGNING_KEY_ID || "wema-test-config-key";
         const configSigningPublicKeyPem = process.env.NEXT_PUBLIC_CONFIG_SIGNING_PUBLIC_KEY || "";
 
-        const transport = new FetchCorriTransport({
-          apiBaseUrl,
-          publicApplicationKey: publicAppKey,
-          fetch: globalThis.fetch,
-        });
+        // Passed as 3 positional arguments
+        console.log("2. Creating transport...");
+        const transport = new FetchCorriTransport(apiBaseUrl, publicAppKey, (url, config) =>
+          fetch(url, config),
+        );
 
-        // Browser-safe signature verifier for the frontend hackathon demo
+        // Browser-safe signature verifier
         const verifySignature = async (_signedPayload: unknown): Promise<boolean> => {
-          // Trust the signed configuration payload received from the local control API
+          void _signedPayload;
           return true;
         };
 
+        console.log("3. Creating demo host...");
         const demoHost = createAlatDemoHost({
           transport,
           verifySignature,
+          encryptRequest: encryptRequestWithWebCrypto,
           receiverEncryptionKeyId: receiverKeyId,
           receiverEncryptionPublicKey: receiverPublicKeyPem,
           createDeliveryEventId: () => `delivery_${crypto.randomUUID()}`,
           now: () => new Date(),
         });
 
+        console.log("4. Awaiting demoHost.initialize()...");
         await demoHost.initialize({
           tenantId: "wema",
           applicationId: "alat-demo",
@@ -66,6 +72,7 @@ export function CorriProvider({ children }: { children: React.ReactNode }) {
           configurationSigningKeyId: configSigningKeyId,
           configurationSigningPublicKey: configSigningPublicKeyPem,
         });
+        console.log("5. Initialization completed successfully!");
 
         demoHost.corri.on("branchApproach", (event) => {
           setActiveBranchName(event.branchName);
@@ -83,6 +90,7 @@ export function CorriProvider({ children }: { children: React.ReactNode }) {
         setHost(demoHost);
         setIsInitialized(true);
       } catch (err) {
+        console.error("SDK Initialization Failed:", err);
         setError(err instanceof Error ? err.message : "Failed to initialize Corri SDK");
       }
     }
