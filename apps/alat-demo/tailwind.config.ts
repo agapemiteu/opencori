@@ -9,10 +9,8 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        wema: {
-          purple: "#7c3aed", // You can adjust this to exact Wema brand hex
-          light: "#ede9fe",
-        },
+        'wema-purple': '#8B0068',
+        'wema-purple-light': '#a11a7d',
       },
     },
   },
