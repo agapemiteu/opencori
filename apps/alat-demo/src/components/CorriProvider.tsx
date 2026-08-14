@@ -22,7 +22,6 @@ const CorriContext = createContext<CorriContextType>({
 });
 
 export function CorriProvider({ children }: { children: React.ReactNode }) {
-  console.log("CorriProvider component is rendering!");
   const [host, setHost] = useState<AlatDemoHost | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [activeBranchName, setActiveBranchName] = useState<string | null>(null);
@@ -32,7 +31,6 @@ export function CorriProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     async function init() {
       try {
-        console.log("1. Starting SDK init...");
         const apiBaseUrl = process.env.NEXT_PUBLIC_CORRI_API_BASE_URL || "http://localhost:3000";
         const publicAppKey = process.env.NEXT_PUBLIC_CORRI_APP_KEY || "demo-app-key";
         const receiverKeyId = process.env.NEXT_PUBLIC_RECEIVER_KEY_ID || "receiver-test-key";
@@ -42,7 +40,6 @@ export function CorriProvider({ children }: { children: React.ReactNode }) {
         const configSigningPublicKeyPem = process.env.NEXT_PUBLIC_CONFIG_SIGNING_PUBLIC_KEY || "";
 
         // Passed as 3 positional arguments
-        console.log("2. Creating transport...");
         const transport = new FetchCorriTransport(apiBaseUrl, publicAppKey, (url, config) =>
           fetch(url, config),
         );
@@ -53,7 +50,6 @@ export function CorriProvider({ children }: { children: React.ReactNode }) {
           return true;
         };
 
-        console.log("3. Creating demo host...");
         const demoHost = createAlatDemoHost({
           transport,
           verifySignature,
@@ -64,7 +60,6 @@ export function CorriProvider({ children }: { children: React.ReactNode }) {
           now: () => new Date(),
         });
 
-        console.log("4. Awaiting demoHost.initialize()...");
         await demoHost.initialize({
           tenantId: "wema",
           applicationId: "alat-demo",
@@ -72,7 +67,6 @@ export function CorriProvider({ children }: { children: React.ReactNode }) {
           configurationSigningKeyId: configSigningKeyId,
           configurationSigningPublicKey: configSigningPublicKeyPem,
         });
-        console.log("5. Initialization completed successfully!");
 
         demoHost.corri.on("branchApproach", (event) => {
           setActiveBranchName(event.branchName);

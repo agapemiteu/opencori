@@ -13,7 +13,7 @@ const SERVICE_CATEGORIES = [
   "Account Opening",
   "Enquiry / Support",
   "Loan Services",
-  "Deposit / Withdrawal"
+  "Deposit / Withdrawal",
 ];
 
 const POSITIVE_TAGS = ["Friendly Staff", "Fast Service", "Issue Resolved", "Clean Environment"];
@@ -33,27 +33,19 @@ export function VisitFeedback({ show, onClose }: VisitFeedbackProps) {
   const availableTags = rating <= 3 && rating > 0 ? CRITICAL_TAGS : POSITIVE_TAGS;
 
   const toggleTag = (tag: string) => {
-    setSelectedTags(prev => 
-      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
     );
   };
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
     // Simulate secure backend API dispatch for demo purposes
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    console.log("Comprehensive Feedback Payload:", { 
-      branch: activeBranchName, 
-      rating, 
-      category: selectedCategory, 
-      tags: selectedTags, 
-      comment 
-    });
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     setIsSubmitting(false);
     setIsSubmitted(true);
-    
+
     setTimeout(() => {
       onClose();
       // Reset form state
@@ -77,7 +69,7 @@ export function VisitFeedback({ show, onClose }: VisitFeedbackProps) {
               Help us elevate our branch experience with your feedback.
             </p>
           </div>
-          
+
           {/* Star Rating */}
           <div className="flex gap-2 justify-center">
             {[1, 2, 3, 4, 5].map((star) => (
@@ -85,7 +77,7 @@ export function VisitFeedback({ show, onClose }: VisitFeedbackProps) {
                 key={star}
                 onClick={() => setRating(star)}
                 className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-all outline-none 
-                  ${rating >= star ? 'bg-amber-100 text-amber-500 scale-110 shadow-sm' : 'bg-slate-100 text-slate-300 hover:bg-amber-50 hover:text-amber-300'}
+                  ${rating >= star ? "bg-amber-100 text-amber-500 scale-110 shadow-sm" : "bg-slate-100 text-slate-300 hover:bg-amber-50 hover:text-amber-300"}
                 `}
               >
                 ★
@@ -96,21 +88,20 @@ export function VisitFeedback({ show, onClose }: VisitFeedbackProps) {
           {/* Conditional Extended Comprehensive Section */}
           {rating > 0 && (
             <div className="space-y-5 animate-in fade-in slide-in-from-top-2">
-              
               {/* Service Category Picker */}
               <div>
                 <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                   What service did you come for?
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {SERVICE_CATEGORIES.map(category => (
+                  {SERVICE_CATEGORIES.map((category) => (
                     <button
                       key={category}
                       onClick={() => setSelectedCategory(category)}
                       className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
-                        selectedCategory === category 
-                          ? 'bg-slate-900 text-white border-slate-900 shadow-xs' 
-                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300'
+                        selectedCategory === category
+                          ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                          : "bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300"
                       }`}
                     >
                       {category}
@@ -125,14 +116,14 @@ export function VisitFeedback({ show, onClose }: VisitFeedbackProps) {
                   {rating <= 3 ? "What could we improve?" : "What stood out?"}
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {availableTags.map(tag => (
+                  {availableTags.map((tag) => (
                     <button
                       key={tag}
                       onClick={() => toggleTag(tag)}
                       className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
-                        selectedTags.includes(tag) 
-                          ? 'bg-[#8B0068] text-white border-[#8B0068]' 
-                          : 'bg-white text-slate-600 border-slate-200 hover:border-[#8B0068]'
+                        selectedTags.includes(tag)
+                          ? "bg-[#8B0068] text-white border-[#8B0068]"
+                          : "bg-white text-slate-600 border-slate-200 hover:border-[#8B0068]"
                       }`}
                     >
                       {tag}
@@ -140,7 +131,7 @@ export function VisitFeedback({ show, onClose }: VisitFeedbackProps) {
                   ))}
                 </div>
               </div>
-              
+
               {/* Comment Box */}
               <textarea
                 value={comment}
@@ -153,7 +144,7 @@ export function VisitFeedback({ show, onClose }: VisitFeedbackProps) {
               <button
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                style={{ backgroundColor: '#8B0068' }}
+                style={{ backgroundColor: "#8B0068" }}
                 className="w-full text-white py-3 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50"
               >
                 {isSubmitting ? "Encrypting & Submitting..." : "Submit Comprehensive Feedback"}
@@ -165,12 +156,19 @@ export function VisitFeedback({ show, onClose }: VisitFeedbackProps) {
         <div className="text-green-600 font-medium py-8 flex flex-col items-center justify-center gap-3 text-center">
           <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M5 13l4 4L19 7"
+              />
             </svg>
           </div>
           <div>
             <h3 className="font-bold text-slate-800">Thank you for your feedback!</h3>
-            <p className="text-xs text-slate-500 mt-0.5">Your insights have been routed securely to branch operations.</p>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Your insights have been routed securely to branch operations.
+            </p>
           </div>
         </div>
       )}
