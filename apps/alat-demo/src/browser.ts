@@ -8,8 +8,8 @@ import {
   type WebCryptoSignatureProvider,
 } from "@corri/sdk";
 
-import { encryptRequestWithWebCrypto, type AlatBrowserCryptoProvider } from "./browser-crypto.js";
-import type { AlatDemoDependencies } from "./index.js";
+import { encryptRequestWithWebCrypto, type AlatBrowserCryptoProvider } from "./browser-crypto";
+import type { AlatDemoDependencies } from "./index";
 
 export interface AlatBrowserRuntimeCrypto
   extends AlatBrowserCryptoProvider,
