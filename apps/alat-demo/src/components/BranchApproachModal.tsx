@@ -40,7 +40,7 @@ export function BranchApproachModal() {
       await host?.corri.confirmVisit();
     } catch (err) {
       console.warn("SDK confirmVisit network routing caught:", err);
-      // Fallback: If the SDK throws a 404 or routing error, we manually clear 
+      // Fallback: If the SDK throws a 404 or routing error, we manually clear
       // the modal so the user seamlessly transitions into the active visit state.
     } finally {
       setIsProcessing(false);
@@ -69,17 +69,31 @@ export function BranchApproachModal() {
         <div className="p-6 text-center space-y-4">
           {/* Updated branding colors */}
           <div className="w-12 h-12 bg-wema-purple/10 rounded-full flex items-center justify-center mx-auto mb-2">
-            <svg className="w-6 h-6 text-wema-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            <svg
+              className="w-6 h-6 text-wema-purple"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+              />
             </svg>
           </div>
-          
-          <h3 className="text-xl font-bold text-slate-900">
-            Welcome to {branchName}
-          </h3>
+
+          <h3 className="text-xl font-bold text-slate-900">Welcome to {branchName}</h3>
           <p className="text-slate-500 text-sm">
-            We noticed you're near our branch. Would you like to check in and let us know what you need today?
+            We noticed you're near our branch. Would you like to check in and let us know what you
+            need today?
           </p>
         </div>
 
@@ -88,12 +102,12 @@ export function BranchApproachModal() {
           <button
             onClick={handleConfirm}
             disabled={isProcessing}
-            style={{ backgroundColor: '#8B0068' }}
+            style={{ backgroundColor: "#8B0068" }}
             className="w-full bg-wema-purple text-white py-3 rounded-lg font-semibold hover:bg-wema-purple-light hover:cursor-pointer transition disabled:opacity-70"
           >
             {isProcessing ? "Confirming..." : "Yes, I'm visiting"}
           </button>
-          
+
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={handleSnooze}

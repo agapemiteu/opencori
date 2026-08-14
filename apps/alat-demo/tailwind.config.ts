@@ -9,8 +9,8 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        'wema-purple': '#8B0068',
-        'wema-purple-light': '#a11a7d',
+        "wema-purple": "#8B0068",
+        "wema-purple-light": "#a11a7d",
       },
     },
   },

@@ -9,9 +9,12 @@ import { VisitFeedback } from "../components/VisitFeedback";
 export default function DashboardPage() {
   const { host, isInitialized, activeBranchName, isVisiting, error } = useCorri();
   const [timer, setTimer] = useState({ active: false, elapsedSeconds: 0 });
-  
+
   const [isMonitoring, setIsMonitoring] = useState(false);
-  const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' | 'info' } | null>(null);
+  const [notification, setNotification] = useState<{
+    message: string;
+    type: "success" | "error" | "info";
+  } | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
   const [hasCompletedVisit, setHasCompletedVisit] = useState(false);
 
@@ -35,7 +38,7 @@ export default function DashboardPage() {
     }
   }, [notification]);
 
-  const showNotify = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+  const showNotify = (message: string, type: "success" | "error" | "info" = "info") => {
     setNotification({ message, type });
   };
 
@@ -45,7 +48,7 @@ export default function DashboardPage() {
       await host.corri.syncNearbyBranches({ latitude: 6.45, longitude: 3.395 });
       host.corri.setConsent({ branchAwareness: true, notifications: true });
       host.corri.startMonitoring();
-      
+
       setIsMonitoring(true);
       showNotify("Monitoring started! We are now watching for nearby Wema branches.", "success");
     } catch (err) {
@@ -65,21 +68,24 @@ export default function DashboardPage() {
 
   const handleStableExit = async () => {
     if (!host) return;
-    
+
     try {
       await Promise.resolve(host.corri.recordControlledExit());
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       const completion = await host.corri.completeStableExit();
-      showNotify(`Visit ended securely. Duration: ${completion.durationSeconds} seconds.`, "success");
-      
+      showNotify(
+        `Visit ended securely. Duration: ${completion.durationSeconds} seconds.`,
+        "success",
+      );
+
       setTimer({ active: false, elapsedSeconds: 0 });
       setHasCompletedVisit(true); // <--- Lock out state
       setShowFeedback(true);
     } catch (err) {
       console.warn("SDK State Machine fallback triggered:", err);
       showNotify(`Visit ended securely. Duration: ${timer.elapsedSeconds} seconds.`, "success");
-      
+
       setTimer({ active: false, elapsedSeconds: 0 });
       setHasCompletedVisit(true); // <--- Lock out state
       setShowFeedback(true);
@@ -101,13 +107,16 @@ export default function DashboardPage() {
   return (
     <main className="min-h-screen bg-slate-50 p-8 relative">
       <div className="max-w-4xl mx-auto space-y-6">
-        
         {notification && (
-          <div className={`fixed top-4 left-4 right-4 p-4 rounded-lg shadow-md border z-50 ${
-            notification.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 
-            notification.type === 'error' ? 'bg-red-50 border-red-200 text-red-800' : 
-            'bg-blue-50 border-blue-200 text-blue-800'
-          } animate-in fade-in slide-in-from-top-4 transition-all duration-300`}>
+          <div
+            className={`fixed top-4 left-4 right-4 p-4 rounded-lg shadow-md border z-50 ${
+              notification.type === "success"
+                ? "bg-green-50 border-green-200 text-green-800"
+                : notification.type === "error"
+                  ? "bg-red-50 border-red-200 text-red-800"
+                  : "bg-blue-50 border-blue-200 text-blue-800"
+            } animate-in fade-in slide-in-from-top-4 transition-all duration-300`}
+          >
             {notification.message}
           </div>
         )}
@@ -133,7 +142,9 @@ export default function DashboardPage() {
               </div>
               <div className="flex justify-between items-center pb-2 border-b border-slate-50">
                 <span className="text-slate-500">Visit State:</span>
-                <span className={`font-medium ${isVisiting && !showFeedback ? "text-green-600" : "text-slate-600"}`}>
+                <span
+                  className={`font-medium ${isVisiting && !showFeedback ? "text-green-600" : "text-slate-600"}`}
+                >
                   {isVisiting && !showFeedback ? "In Progress" : "Waiting"}
                 </span>
               </div>
@@ -160,7 +171,10 @@ export default function DashboardPage() {
               <button
                 onClick={handleTriggerApproach}
                 disabled={!isMonitoring || isVisiting || hasCompletedVisit}
-                style={{ backgroundColor: (!isMonitoring || isVisiting || hasCompletedVisit) ? '#cbd5e1' : '#8B0068' }}
+                style={{
+                  backgroundColor:
+                    !isMonitoring || isVisiting || hasCompletedVisit ? "#cbd5e1" : "#8B0068",
+                }}
                 className="w-full text-white py-2.5 rounded-lg hover:opacity-90 hover:cursor-pointer transition shadow-sm font-medium disabled:cursor-not-allowed"
               >
                 2. Trigger Approach (Marina)
@@ -171,7 +185,11 @@ export default function DashboardPage() {
                 disabled={!isVisiting || showFeedback || hasCompletedVisit}
                 className="w-full border-2 border-slate-200 text-slate-700 py-2.5 rounded-lg hover:bg-slate-50 hover:cursor-pointer transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {hasCompletedVisit ? "Visit Completed" : showFeedback ? "Submitting Feedback..." : "3. Trigger Stable Exit"}
+                {hasCompletedVisit
+                  ? "Visit Completed"
+                  : showFeedback
+                    ? "Submitting Feedback..."
+                    : "3. Trigger Stable Exit"}
               </button>
             </div>
           </section>
@@ -179,12 +197,8 @@ export default function DashboardPage() {
 
         {/* Concierge hides immediately when feedback shows */}
         {!showFeedback && !hasCompletedVisit && <CustomerConcierge onNotify={showNotify} />}
-        
-        <VisitFeedback 
-          show={showFeedback} 
-          onClose={() => setShowFeedback(false)} 
-        />
 
+        <VisitFeedback show={showFeedback} onClose={() => setShowFeedback(false)} />
       </div>
       <BranchApproachModal />
     </main>

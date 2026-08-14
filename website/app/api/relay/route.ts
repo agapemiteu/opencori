@@ -1,11 +1,12 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   const started = Date.now();
   const body = await request.json();
-  const required = ['eventId','routeKey','branchId','ciphertext'];
+  const required = ["eventId", "routeKey", "branchId", "ciphertext"];
   const missing = required.filter((key) => !body?.[key]);
-  if (missing.length) return NextResponse.json({error:`missing:${missing.join(',')}`},{status:400});
+  if (missing.length)
+    return NextResponse.json({ error: `missing:${missing.join(",")}` }, { status: 400 });
 
   // Deliberately content-blind. Do not decode, inspect, log or persist ciphertext.
   if (body.failOnce) await new Promise((resolve) => setTimeout(resolve, 420));
