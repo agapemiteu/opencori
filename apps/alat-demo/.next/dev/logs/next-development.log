@@ -497,3 +497,11 @@
 {"timestamp":"02:36:37.537","source":"Browser","level":"LOG","message":"5. Initialization completed successfully!"}
 {"timestamp":"02:36:37.537","source":"Browser","level":"LOG","message":"CorriProvider component is rendering!"}
 {"timestamp":"02:36:37.537","source":"Browser","level":"LOG","message":"CorriProvider component is rendering!"}
+{"timestamp":"02:37:06.737","source":"Browser","level":"LOG","message":"CorriProvider component is rendering!"}
+{"timestamp":"02:37:06.737","source":"Browser","level":"LOG","message":"CorriProvider component is rendering!"}
+{"timestamp":"02:37:09.453","source":"Browser","level":"LOG","message":"CorriProvider component is rendering!"}
+{"timestamp":"02:37:09.453","source":"Browser","level":"LOG","message":"CorriProvider component is rendering!"}
+{"timestamp":"02:37:14.829","source":"Browser","level":"LOG","message":"Mocking secure request. Payload: Card Pickup / Replacement"}
+{"timestamp":"02:37:20.472","source":"Browser","level":"WARN","message":"SDK State Machine fallback triggered: Error: Visit completion was rejected by the state machine"}
+{"timestamp":"02:37:20.502","source":"Server","level":"WARN","message":"[browser] \"SDK State Machine fallback triggered:\" \"Error: Visit completion was rejected by the state machine\\n    at CorriClient.completeVisitFromEffects (../../packages/corri-react-native/src/index.ts:624:13)\\n    at CorriClient.completeStableExit (../../packages/corri-react-native/src/index.ts:410:17)\\n    at handleStableExit (src/app/page.tsx:140:43)\\n  622 |     );\\n  623 |     if (completed === undefined) {\\n> 624 |       throw new Error(\\\"Visit completion was rejected by the state machine\\\");\\n      |             ^\\n  625 |     }\\n  626 |     const event = visitCompletedEventSchema.parse({\\n  627 |       ...this.eventBase(completed.branchId, completed.visitToken, completed.endedAt),\" \"(src/app/page.tsx:148:15)\""}
+{"timestamp":"02:37:35.546","source":"Browser","level":"LOG","message":"Comprehensive Feedback Payload: {\"branch\":\"Wema Marina\",\"category\":\"Card Issuance\",\"comment\":\"\",\"rating\":5,\"tags\":[\"Issue Resolved\"]}"}
