@@ -8,16 +8,29 @@ import { VisitFeedback } from "../components/VisitFeedback";
 
 export default function DashboardPage() {
   const { host, isInitialized, activeBranchName, isVisiting, error } = useCorri();
-  const [timer, setTimer] = useState({ active: false, elapsedSeconds: 0 });
   
+  // Artificial delay state for demo purposes
+  const [demoInitialized, setDemoInitialized] = useState(false);
+  
+  const [timer, setTimer] = useState({ active: false, elapsedSeconds: 0 });
   const [isMonitoring, setIsMonitoring] = useState(false);
   const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' | 'info' } | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
   const [hasCompletedVisit, setHasCompletedVisit] = useState(false);
 
+  // Add the artificial delay when the actual SDK finishes initializing
+  useEffect(() => {
+    if (isInitialized) {
+      const delayTimer = setTimeout(() => {
+        setDemoInitialized(true);
+      }, 3000); // 3000ms = 3 seconds. Adjust this number to make it longer/shorter
+      
+      return () => clearTimeout(delayTimer);
+    }
+  }, [isInitialized]);
+
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    // Only run timer if actively visiting AND we haven't completed/exited yet
     if (isVisiting && host && !showFeedback && !hasCompletedVisit) {
       interval = setInterval(() => {
         setTimer(host.corri.getVisitTimer());
@@ -74,14 +87,14 @@ export default function DashboardPage() {
       showNotify(`Visit ended securely. Duration: ${completion.durationSeconds} seconds.`, "success");
       
       setTimer({ active: false, elapsedSeconds: 0 });
-      setHasCompletedVisit(true); // <--- Lock out state
+      setHasCompletedVisit(true);
       setShowFeedback(true);
     } catch (err) {
       console.warn("SDK State Machine fallback triggered:", err);
       showNotify(`Visit ended securely. Duration: ${timer.elapsedSeconds} seconds.`, "success");
       
       setTimer({ active: false, elapsedSeconds: 0 });
-      setHasCompletedVisit(true); // <--- Lock out state
+      setHasCompletedVisit(true);
       setShowFeedback(true);
     }
   };
@@ -90,10 +103,12 @@ export default function DashboardPage() {
     return <div className="p-8 text-red-600 bg-red-50 min-h-screen">Error: {error}</div>;
   }
 
-  if (!isInitialized) {
+  // Use demoInitialized instead of isInitialized here
+  if (!demoInitialized) {
     return (
-      <div className="p-8 flex items-center justify-center min-h-screen text-slate-500">
-        Initializing Corri SDK...
+      <div className="p-8 flex flex-col items-center justify-center min-h-screen text-slate-500 space-y-4">
+        <div className="w-10 h-10 border-4 border-slate-200 border-t-[#8B0068] rounded-full animate-spin"></div>
+        <p className="font-medium animate-pulse">Initializing Corri SDK...</p>
       </div>
     );
   }
@@ -177,7 +192,6 @@ export default function DashboardPage() {
           </section>
         </div>
 
-        {/* Concierge hides immediately when feedback shows */}
         {!showFeedback && !hasCompletedVisit && <CustomerConcierge onNotify={showNotify} />}
         
         <VisitFeedback 
@@ -186,7 +200,8 @@ export default function DashboardPage() {
         />
 
       </div>
-      <BranchApproachModal />
+      
+      <BranchApproachModal onNotify={showNotify} />
     </main>
   );
 }
