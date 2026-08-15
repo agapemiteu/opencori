@@ -1,34 +1,54 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useCorri } from "./CorriProvider";
 
-// We keep your interface for the component's state
 interface ApproachEvent {
   branch?: {
     name: string;
   };
 }
 
-export function BranchApproachModal() {
-  const { host } = useCorri();
+interface BranchApproachModalProps {
+  onNotify?: (message: string, type: 'success' | 'error' | 'info') => void;
+}
+
+export function BranchApproachModal({ onNotify }: BranchApproachModalProps) {
+  const { host, isVisiting } = useCorri();
   const [approachEvent, setApproachEvent] = useState<ApproachEvent | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  const snoozeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isVisitingRef = useRef(isVisiting);
+
+  // Keep ref synced with latest visit state
+  useEffect(() => {
+    isVisitingRef.current = isVisiting;
+  }, [isVisiting]);
+
+  // MOVED UP: Declare this before it is used in the useEffect below
+  const clearSnoozeTimer = () => {
+    if (snoozeTimeoutRef.current) {
+      clearTimeout(snoozeTimeoutRef.current);
+      snoozeTimeoutRef.current = null;
+    }
+  };
 
   useEffect(() => {
     if (!host) return;
 
-    // Use 'unknown' in the callback parameter, validate, then cast to the local interface.
     const unsubscribe = host.corri.on("branchApproach", (eventData: unknown) => {
       if (typeof eventData === "object" && eventData !== null) {
         setApproachEvent(eventData as ApproachEvent);
+        clearSnoozeTimer();
       }
     });
 
     return () => {
       if (unsubscribe) unsubscribe();
+      clearSnoozeTimer();
     };
-  }, [host]);
+  }, [host]); // clearSnoozeTimer doesn't need to be in dependency array since it's just updating a mutable ref
 
   if (!approachEvent) return null;
 
@@ -36,12 +56,11 @@ export function BranchApproachModal() {
 
   const handleConfirm = async () => {
     setIsProcessing(true);
+    clearSnoozeTimer();
     try {
       await host?.corri.confirmVisit();
     } catch (err) {
       console.warn("SDK confirmVisit network routing caught:", err);
-      // Fallback: If the SDK throws a 404 or routing error, we manually clear 
-      // the modal so the user seamlessly transitions into the active visit state.
     } finally {
       setIsProcessing(false);
       setApproachEvent(null);
@@ -51,14 +70,32 @@ export function BranchApproachModal() {
   const handleSnooze = () => {
     host?.corri.snoozeBranch();
     setApproachEvent(null);
+
+    if (onNotify) {
+      onNotify("Visit snoozed. We will check your location again in 3 minutes.", "info");
+    }
+
+    snoozeTimeoutRef.current = setTimeout(() => {
+      if (host && !isVisitingRef.current) {
+        try {
+          if (onNotify) onNotify("You're still near the branch. Checking in?", "info");
+          const safeBranchId = branchName.toLowerCase().replace(/\s+/g, "_");
+          host.corri.triggerControlledApproach(safeBranchId);
+        } catch (err) {
+          console.warn("Failed to re-trigger approach:", err);
+        }
+      }
+    }, 3 * 60 * 1000); 
   };
 
   const handleDecline = () => {
+    clearSnoozeTimer();
     host?.corri.declineVisit();
     setApproachEvent(null);
   };
 
   const handleDismiss = () => {
+    clearSnoozeTimer();
     host?.corri.ignoreApproach();
     setApproachEvent(null);
   };
@@ -67,7 +104,6 @@ export function BranchApproachModal() {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
       <div className="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200">
         <div className="p-6 text-center space-y-4">
-          {/* Updated branding colors */}
           <div className="w-12 h-12 bg-wema-purple/10 rounded-full flex items-center justify-center mx-auto mb-2">
             <svg className="w-6 h-6 text-wema-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -84,12 +120,11 @@ export function BranchApproachModal() {
         </div>
 
         <div className="p-4 bg-slate-50 border-t border-slate-100 flex flex-col gap-2">
-          {/* Updated branding colors */}
           <button
             onClick={handleConfirm}
             disabled={isProcessing}
             style={{ backgroundColor: '#8B0068' }}
-            className="w-full bg-wema-purple text-white py-3 rounded-lg font-semibold hover:bg-wema-purple-light hover:cursor-pointer transition disabled:opacity-70"
+            className="w-full text-white py-3 rounded-lg font-semibold hover:opacity-90 hover:cursor-pointer transition disabled:opacity-70"
           >
             {isProcessing ? "Confirming..." : "Yes, I'm visiting"}
           </button>
