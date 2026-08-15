@@ -65,6 +65,8 @@
     --color-blue-50: #eff6ff;
     --color-blue-200: #bedbff;
     --color-blue-800: #193cb8;
+    --color-purple-50: #faf5ff;
+    --color-purple-600: #9810fa;
     --color-slate-50: #f8fafc;
     --color-slate-100: #f1f5f9;
     --color-slate-200: #e2e8f0;
@@ -89,6 +91,7 @@
     --text-xl--line-height: calc(1.75 / 1.25);
     --text-2xl: 1.5rem;
     --text-2xl--line-height: calc(2 / 1.5);
+    --font-weight-normal: 400;
     --font-weight-medium: 500;
     --font-weight-semibold: 600;
     --font-weight-bold: 700;
@@ -128,6 +131,8 @@
       --color-blue-50: lab(96.492% -1.14647 -5.11479);
       --color-blue-200: lab(86.15% -4.04379 -21.0797);
       --color-blue-800: lab(30.2514% 27.7854 -70.2699);
+      --color-purple-50: lab(97.1626% 2.99937 -4.13398);
+      --color-purple-600: lab(43.0295% 75.21 -86.5669);
       --color-slate-50: lab(98.1434% -.369549 -1.05968);
       --color-slate-100: lab(96.286% -.852466 -2.46847);
       --color-slate-200: lab(91.7353% -.998765 -4.76968);
@@ -882,6 +887,11 @@
     font-weight: var(--font-weight-medium);
   }
 
+  .font-normal {
+    --tw-font-weight: var(--font-weight-normal);
+    font-weight: var(--font-weight-normal);
+  }
+
   .font-semibold {
     --tw-font-weight: var(--font-weight-semibold);
     font-weight: var(--font-weight-semibold);
@@ -918,6 +928,10 @@
 
   .text-green-800 {
     color: var(--color-green-800);
+  }
+
+  .text-purple-600 {
+    color: var(--color-purple-600);
   }
 
   .text-red-600 {
@@ -958,6 +972,10 @@
 
   .text-white {
     color: var(--color-white);
+  }
+
+  .lowercase {
+    text-transform: lowercase;
   }
 
   .uppercase {
@@ -1036,6 +1054,11 @@
       border-color: #8b0068;
     }
 
+    .hover\:border-\[\#8B0068\]\/30:hover {
+      border-color: #8b00684d;
+      border-color: lab(30.8394% 56.0465 -19.0191 / .3);
+    }
+
     .hover\:border-slate-300:hover {
       border-color: var(--color-slate-300);
     }
@@ -1044,12 +1067,20 @@
       background-color: var(--color-amber-50);
     }
 
+    .hover\:bg-purple-50:hover {
+      background-color: var(--color-purple-50);
+    }
+
     .hover\:bg-slate-50:hover {
       background-color: var(--color-slate-50);
     }
 
     .hover\:bg-slate-700:hover {
       background-color: var(--color-slate-700);
+    }
+
+    .hover\:text-\[\#8B0068\]:hover {
+      color: #8b0068;
     }
 
     .hover\:text-amber-300:hover {

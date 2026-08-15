@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCorri } from "./CorriProvider";
 
 interface VisitFeedbackProps {
   show: boolean;
   onClose: () => void;
+  initialCategory?: string; // Pre-selected service category passed from parent/concierge
 }
 
 const SERVICE_CATEGORIES = [
@@ -19,7 +20,7 @@ const SERVICE_CATEGORIES = [
 const POSITIVE_TAGS = ["Friendly Staff", "Fast Service", "Issue Resolved", "Clean Environment"];
 const CRITICAL_TAGS = ["Long Wait Time", "Unresolved Issue", "Crowded", "Staff Unresponsive"];
 
-export function VisitFeedback({ show, onClose }: VisitFeedbackProps) {
+export function VisitFeedback({ show, onClose, initialCategory }: VisitFeedbackProps) {
   const { activeBranchName } = useCorri();
   const [rating, setRating] = useState<number>(0);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
@@ -27,6 +28,18 @@ export function VisitFeedback({ show, onClose }: VisitFeedbackProps) {
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  // Map concierge selections to closest feedback category when provided
+  useEffect(() => {
+    if (!initialCategory) return;
+    
+    const lower = initialCategory.toLowerCase();
+    if (lower.includes("card")) setSelectedCategory("Card Issuance");
+    else if (lower.includes("account") || lower.includes("bvn")) setSelectedCategory("Account Opening");
+    else if (lower.includes("cash") || lower.includes("deposit") || lower.includes("withdrawal")) setSelectedCategory("Deposit / Withdrawal");
+    else if (lower.includes("loan")) setSelectedCategory("Loan Services");
+    else setSelectedCategory("Enquiry / Support");
+  }, [initialCategory]);
 
   if (!show) return null;
 
@@ -40,7 +53,6 @@ export function VisitFeedback({ show, onClose }: VisitFeedbackProps) {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    // Simulate secure backend API dispatch for demo purposes
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     console.log("Comprehensive Feedback Payload:", { 
@@ -56,7 +68,6 @@ export function VisitFeedback({ show, onClose }: VisitFeedbackProps) {
     
     setTimeout(() => {
       onClose();
-      // Reset form state
       setRating(0);
       setSelectedCategory("");
       setSelectedTags([]);
@@ -84,7 +95,7 @@ export function VisitFeedback({ show, onClose }: VisitFeedbackProps) {
               <button
                 key={star}
                 onClick={() => setRating(star)}
-                className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-all outline-none 
+                className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-all outline-none hover:cursor-pointer
                   ${rating >= star ? 'bg-amber-100 text-amber-500 scale-110 shadow-sm' : 'bg-slate-100 text-slate-300 hover:bg-amber-50 hover:text-amber-300'}
                 `}
               >
@@ -100,14 +111,14 @@ export function VisitFeedback({ show, onClose }: VisitFeedbackProps) {
               {/* Service Category Picker */}
               <div>
                 <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                  What service did you come for?
+                  What service did you come for? {initialCategory && <span className="text-purple-600 font-normal lowercase">(auto-selected from your request)</span>}
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {SERVICE_CATEGORIES.map(category => (
                     <button
                       key={category}
                       onClick={() => setSelectedCategory(category)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border hover:cursor-pointer ${
                         selectedCategory === category 
                           ? 'bg-slate-900 text-white border-slate-900 shadow-xs' 
                           : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300'
@@ -129,7 +140,7 @@ export function VisitFeedback({ show, onClose }: VisitFeedbackProps) {
                     <button
                       key={tag}
                       onClick={() => toggleTag(tag)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors border hover:cursor-pointer ${
                         selectedTags.includes(tag) 
                           ? 'bg-[#8B0068] text-white border-[#8B0068]' 
                           : 'bg-white text-slate-600 border-slate-200 hover:border-[#8B0068]'
@@ -154,7 +165,7 @@ export function VisitFeedback({ show, onClose }: VisitFeedbackProps) {
                 onClick={handleSubmit}
                 disabled={isSubmitting}
                 style={{ backgroundColor: '#8B0068' }}
-                className="w-full text-white py-3 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50"
+                className="w-full text-white py-3 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 hover:cursor-pointer"
               >
                 {isSubmitting ? "Encrypting & Submitting..." : "Submit Comprehensive Feedback"}
               </button>

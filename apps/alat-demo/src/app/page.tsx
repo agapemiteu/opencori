@@ -20,7 +20,10 @@ export default function DashboardPage() {
   const [snoozeTimeLeft, setSnoozeTimeLeft] = useState<number | null>(null);
   const [snoozedBranch, setSnoozedBranch] = useState<string | null>(null);
   const [forceModalOpen, setForceModalOpen] = useState(false);
-  const [frontendForceVisiting, setFrontendForceVisiting] = useState(false); // NEW override flag
+  const [frontendForceVisiting, setFrontendForceVisiting] = useState(false); // override flag
+
+  // shared option for concierge and feedback to pre-select service category
+  const [selectedService, setSelectedService] = useState<string>("");
 
   useEffect(() => {
     if (isInitialized) {
@@ -260,11 +263,15 @@ export default function DashboardPage() {
         </div>
 
         {/* Updated check to respect effectiveIsVisiting */}
-        {effectiveIsVisiting && !showFeedback && !hasCompletedVisit && <CustomerConcierge onNotify={showNotify} />}
+        {effectiveIsVisiting && !showFeedback && !hasCompletedVisit && <CustomerConcierge
+          onNotify={showNotify}
+          onSelectService={(service) => setSelectedService(service)}
+        />}
         
         <VisitFeedback 
           show={showFeedback} 
           onClose={() => setShowFeedback(false)} 
+          initialCategory={selectedService}
         />
 
       </div>
