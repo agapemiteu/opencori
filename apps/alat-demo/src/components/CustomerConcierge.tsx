@@ -8,12 +8,9 @@ interface CustomerConciergeProps {
 }
 
 export function CustomerConcierge({ onNotify }: CustomerConciergeProps) {
-  const { host, isVisiting, activeBranchName } = useCorri();
+  const { host, activeBranchName } = useCorri();
   const [requestText, setRequestText] = useState("");
   const [isSendingRequest, setIsSendingRequest] = useState(false);
-
-  // If not visiting, this component renders nothing
-  if (!isVisiting) return null;
 
   const handleSendRequest = async () => {
     if (!host || !requestText.trim()) return;
@@ -40,7 +37,7 @@ export function CustomerConcierge({ onNotify }: CustomerConciergeProps) {
     <section className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 animate-in slide-in-from-bottom-4 fade-in duration-300">
       <h2 className="text-lg font-semibold mb-2 text-slate-800">Branch Concierge</h2>
       <p className="text-sm text-slate-500 mb-4">
-        You are currently checked into {activeBranchName}. Let the tellers know what you need so they can prepare before you walk up to the counter.
+        You are currently checked into {activeBranchName || "Wema Marina"}. Let the tellers know what you need so they can prepare before you walk up to the counter.
       </p>
       
       <div className="space-y-3">

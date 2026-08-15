@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useCorri } from "./CorriProvider";
 
 interface ApproachEvent {
@@ -11,44 +11,49 @@ interface ApproachEvent {
 
 interface BranchApproachModalProps {
   onNotify?: (message: string, type: 'success' | 'error' | 'info') => void;
+  onSnooze?: (branchName: string) => void;
+  onClearSnooze?: () => void;
+  forceOpen?: boolean;
+  snoozedBranchName?: string | null;
+  onForceConfirm?: () => void; // NEW callback for frontend state bypass
 }
 
-export function BranchApproachModal({ onNotify }: BranchApproachModalProps) {
-  const { host, isVisiting } = useCorri();
+export function BranchApproachModal({ 
+  onNotify, 
+  onSnooze, 
+  onClearSnooze, 
+  forceOpen = false, 
+  snoozedBranchName,
+  onForceConfirm
+}: BranchApproachModalProps) {
+  const { host } = useCorri();
   const [approachEvent, setApproachEvent] = useState<ApproachEvent | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   
-  const snoozeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isVisitingRef = useRef(isVisiting);
-
-  // Keep ref synced with latest visit state
-  useEffect(() => {
-    isVisitingRef.current = isVisiting;
-  }, [isVisiting]);
-
-  // MOVED UP: Declare this before it is used in the useEffect below
-  const clearSnoozeTimer = () => {
-    if (snoozeTimeoutRef.current) {
-      clearTimeout(snoozeTimeoutRef.current);
-      snoozeTimeoutRef.current = null;
-    }
-  };
-
   useEffect(() => {
     if (!host) return;
 
     const unsubscribe = host.corri.on("branchApproach", (eventData: unknown) => {
       if (typeof eventData === "object" && eventData !== null) {
         setApproachEvent(eventData as ApproachEvent);
-        clearSnoozeTimer();
+        if (onClearSnooze) onClearSnooze();
       }
     });
 
     return () => {
       if (unsubscribe) unsubscribe();
-      clearSnoozeTimer();
     };
-  }, [host]); // clearSnoozeTimer doesn't need to be in dependency array since it's just updating a mutable ref
+  }, [host]);
+
+  useEffect(() => {
+    if (forceOpen) {
+      setApproachEvent({
+        branch: {
+          name: snoozedBranchName || "Wema Marina"
+        }
+      });
+    }
+  }, [forceOpen, snoozedBranchName]);
 
   if (!approachEvent) return null;
 
@@ -56,47 +61,53 @@ export function BranchApproachModal({ onNotify }: BranchApproachModalProps) {
 
   const handleConfirm = async () => {
     setIsProcessing(true);
-    clearSnoozeTimer();
+    if (onClearSnooze) onClearSnooze(); 
+    
     try {
       await host?.corri.confirmVisit();
     } catch (err) {
-      console.warn("SDK confirmVisit network routing caught:", err);
+      console.warn("SDK confirmVisit strict state caught, using frontend override:", err);
     } finally {
       setIsProcessing(false);
       setApproachEvent(null);
+      // Force the frontend state to launch the concierge form instantly
+      if (onForceConfirm) onForceConfirm();
     }
   };
 
   const handleSnooze = () => {
-    host?.corri.snoozeBranch();
+    try {
+      host?.corri.snoozeBranch();
+    } catch (err) {
+      console.warn("SDK snoozeBranch state fallback caught:", err);
+    }
+    
     setApproachEvent(null);
 
     if (onNotify) {
-      onNotify("Visit snoozed. We will check your location again in 3 minutes.", "info");
+      onNotify("Visit snoozed. Monitoring location in background.", "info");
     }
-
-    snoozeTimeoutRef.current = setTimeout(() => {
-      if (host && !isVisitingRef.current) {
-        try {
-          if (onNotify) onNotify("You're still near the branch. Checking in?", "info");
-          const safeBranchId = branchName.toLowerCase().replace(/\s+/g, "_");
-          host.corri.triggerControlledApproach(safeBranchId);
-        } catch (err) {
-          console.warn("Failed to re-trigger approach:", err);
-        }
-      }
-    }, 3 * 60 * 1000); 
+    
+    if (onSnooze) onSnooze(branchName);
   };
 
   const handleDecline = () => {
-    clearSnoozeTimer();
-    host?.corri.declineVisit();
+    if (onClearSnooze) onClearSnooze();
+    try {
+      host?.corri.declineVisit();
+    } catch (err) {
+      console.warn("SDK declineVisit fallback caught:", err);
+    }
     setApproachEvent(null);
   };
 
   const handleDismiss = () => {
-    clearSnoozeTimer();
-    host?.corri.ignoreApproach();
+    if (onClearSnooze) onClearSnooze();
+    try {
+      host?.corri.ignoreApproach();
+    } catch (err) {
+      console.warn("SDK ignoreApproach fallback caught:", err);
+    }
     setApproachEvent(null);
   };
 
