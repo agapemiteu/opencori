@@ -159,6 +159,7 @@ export interface CorriDiagnostics {
   consent: CorriConsent;
   monitoring: boolean;
   state: CorriState;
+  cooldownEndsAt: string | null;
   registeredBranchCount: number;
   pendingVisitEventCount: number;
 }
@@ -348,6 +349,12 @@ export class CorriClient {
       throw new Error("Branch is not registered");
     }
     const at = this.now().getTime();
+    if (this.geofenceState.status === "COOLDOWN" || this.geofenceState.status === "LONG_COOLDOWN") {
+      this.dispatch({ type: "COOLDOWN_ELAPSED", at });
+    }
+    if (this.geofenceState.status !== "MONITORING") {
+      return;
+    }
     this.dispatch({
       type: "APPROACH_DETECTED",
       at,
@@ -505,6 +512,10 @@ export class CorriClient {
   }
 
   getDiagnostics(): CorriDiagnostics {
+    const cooldownEndsAt =
+      this.geofenceState.status === "COOLDOWN" || this.geofenceState.status === "LONG_COOLDOWN"
+        ? new Date(this.geofenceState.until).toISOString()
+        : null;
     return {
       initialized: this.initialized !== null,
       configurationVerified: this.configuration !== null,
@@ -512,6 +523,7 @@ export class CorriClient {
       consent: this.getConsent(),
       monitoring: this.monitoring,
       state: this.geofenceState.status,
+      cooldownEndsAt,
       registeredBranchCount: this.registeredBranches.length,
       pendingVisitEventCount: this.pendingVisitEvents.length,
     };

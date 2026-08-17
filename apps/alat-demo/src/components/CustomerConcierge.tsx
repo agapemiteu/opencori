@@ -2,17 +2,19 @@
 
 import { useState } from "react";
 import { useCorri } from "./CorriProvider";
+import { SUGGESTED_SERVICES, type FeedbackCategory } from "./service-options";
 
 interface CustomerConciergeProps {
   onNotify: (message: string, type: "success" | "error" | "info") => void;
+  onSelectService?: (category: FeedbackCategory) => void;
 }
 
-export function CustomerConcierge({ onNotify }: CustomerConciergeProps) {
+export function CustomerConcierge({ onNotify, onSelectService }: CustomerConciergeProps) {
   const { host, isVisiting, activeBranchName } = useCorri();
   const [requestText, setRequestText] = useState("");
+  const [requestCategory, setRequestCategory] = useState<FeedbackCategory | undefined>();
   const [isSendingRequest, setIsSendingRequest] = useState(false);
 
-  // If not visiting, this component renders nothing
   if (!isVisiting) return null;
 
   const handleSendRequest = async () => {
@@ -20,20 +22,39 @@ export function CustomerConcierge({ onNotify }: CustomerConciergeProps) {
 
     setIsSendingRequest(true);
     try {
-      if (process.env.NEXT_PUBLIC_RECEIVER_PUBLIC_KEY) {
-        await host.sendCustomerRequest(requestText);
-      } else {
-        // No receiver key configured, so mock the encrypted dispatch
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+      if (!process.env.NEXT_PUBLIC_RECEIVER_PUBLIC_KEY) {
+        throw new Error("The demo receiver encryption key is not configured. Request not sent.");
       }
-      onNotify("Your request was encrypted and sent to the branch staff!", "success");
+      const receipt = await host.sendCustomerRequest(requestText);
+      if (["FAILED", "EXPIRED", "DEAD_LETTERED"].includes(receipt.state)) {
+        throw new Error(`Encrypted request delivery ended in ${receipt.state}.`);
+      }
+      if (receipt.state === "DELIVERED") {
+        onNotify(
+          "Your encrypted request was delivered to the configured Wema receiver.",
+          "success",
+        );
+      } else {
+        onNotify(
+          `Your encrypted request was accepted with state ${receipt.state}. Delivery is not yet confirmed.`,
+          "info",
+        );
+      }
+      if (requestCategory !== undefined) {
+        onSelectService?.(requestCategory);
+      }
       setRequestText("");
-    } catch (err: Error | unknown) {
-      console.error("SEND ERROR:", err);
-      onNotify(err instanceof Error ? err.message : "Failed to send secure request.", "error");
+      setRequestCategory(undefined);
+    } catch (error) {
+      onNotify(error instanceof Error ? error.message : "Failed to send secure request.", "error");
     } finally {
       setIsSendingRequest(false);
     }
+  };
+
+  const handleServiceClick = (service: (typeof SUGGESTED_SERVICES)[number]) => {
+    setRequestText(service.label);
+    setRequestCategory(service.feedbackCategory);
   };
 
   return (
@@ -44,12 +65,33 @@ export function CustomerConcierge({ onNotify }: CustomerConciergeProps) {
         they can prepare before you walk up to the counter.
       </p>
 
+      <div className="mb-4">
+        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+          Suggested Services
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {SUGGESTED_SERVICES.map((service) => (
+            <button
+              key={service.id}
+              onClick={() => handleServiceClick(service)}
+              type="button"
+              className="min-h-11 text-xs bg-slate-100 hover:bg-purple-50 hover:text-[#8B0068] hover:border-[#8B0068]/30 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-full transition font-medium hover:cursor-pointer"
+            >
+              {service.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="space-y-3">
         <textarea
           value={requestText}
-          onChange={(e) => setRequestText(e.target.value)}
+          onChange={(event) => {
+            setRequestText(event.target.value);
+            setRequestCategory(undefined);
+          }}
           placeholder="E.g., I need to request a new debit card..."
-          className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#8B0068] focus:border-transparent outline-none resize-none text-slate-700"
+          className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#8B0068] focus:border-transparent outline-none resize-none text-slate-700 text-sm"
           rows={3}
         />
         <button
@@ -58,7 +100,7 @@ export function CustomerConcierge({ onNotify }: CustomerConciergeProps) {
           style={{
             backgroundColor: !requestText.trim() || isSendingRequest ? "#cbd5e1" : "#8B0068",
           }}
-          className="w-full text-white py-3 rounded-lg font-semibold hover:opacity-90 transition disabled:cursor-not-allowed"
+          className="w-full text-white py-3 rounded-lg font-semibold hover:opacity-90 transition disabled:cursor-not-allowed text-sm hover:cursor-pointer"
         >
           {isSendingRequest ? "Encrypting & Sending..." : "Send Secure Request"}
         </button>

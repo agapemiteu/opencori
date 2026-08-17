@@ -395,6 +395,82 @@ describe("CorriClient", () => {
     expect(declined.getDiagnostics().state).toBe("LONG_COOLDOWN");
   });
 
+  it("re-enables controlled approaches only after the configured snooze cooldown", async () => {
+    const transport = new TestTransport();
+    let now = new Date("2026-08-03T10:00:00.000Z");
+    const client = new CorriClient({
+      transport,
+      verifySignature: verifySignedPayload,
+      now: () => now,
+    });
+    initialize(client);
+    await client.syncConfiguration();
+    await client.syncNearbyBranches({ latitude: 6.45, longitude: 3.395 });
+    client.setConsent({ branchAwareness: true, notifications: true });
+    client.startMonitoring();
+
+    const approaches: string[] = [];
+    client.on("branchApproach", (event) => approaches.push(event.branchName));
+    client.triggerControlledApproach("wema_marina");
+    client.snoozeBranch();
+
+    expect(client.getDiagnostics()).toMatchObject({
+      state: "COOLDOWN",
+      cooldownEndsAt: "2026-08-03T10:05:00.000Z",
+    });
+
+    now = new Date("2026-08-03T10:04:59.999Z");
+    client.triggerControlledApproach("wema_marina");
+    expect(client.getDiagnostics().state).toBe("COOLDOWN");
+    expect(approaches).toEqual(["Wema Marina"]);
+
+    now = new Date("2026-08-03T10:05:00.000Z");
+    client.triggerControlledApproach("wema_marina");
+    expect(client.getDiagnostics()).toMatchObject({
+      state: "PROMPT_PENDING",
+      cooldownEndsAt: null,
+    });
+    expect(approaches).toEqual(["Wema Marina", "Wema Marina"]);
+  });
+
+  it("re-enables controlled approaches only after the configured decline cooldown", async () => {
+    const transport = new TestTransport();
+    let now = new Date("2026-08-03T10:00:00.000Z");
+    const client = new CorriClient({
+      transport,
+      verifySignature: verifySignedPayload,
+      now: () => now,
+    });
+    initialize(client);
+    await client.syncConfiguration();
+    await client.syncNearbyBranches({ latitude: 6.45, longitude: 3.395 });
+    client.setConsent({ branchAwareness: true, notifications: true });
+    client.startMonitoring();
+
+    const approaches: string[] = [];
+    client.on("branchApproach", (event) => approaches.push(event.branchName));
+    client.triggerControlledApproach("wema_marina");
+    client.declineVisit();
+
+    expect(client.getDiagnostics()).toMatchObject({
+      state: "LONG_COOLDOWN",
+      cooldownEndsAt: "2026-08-04T10:00:00.000Z",
+    });
+
+    now = new Date("2026-08-04T09:59:59.999Z");
+    client.triggerControlledApproach("wema_marina");
+    expect(client.getDiagnostics().state).toBe("LONG_COOLDOWN");
+    expect(approaches).toEqual(["Wema Marina"]);
+
+    now = new Date("2026-08-04T10:00:00.000Z");
+    client.triggerControlledApproach("wema_marina");
+    expect(client.getDiagnostics()).toMatchObject({
+      state: "PROMPT_PENDING",
+      cooldownEndsAt: null,
+    });
+    expect(approaches).toEqual(["Wema Marina", "Wema Marina"]);
+  });
+
   it("rejects configuration that does not verify against the pinned key", async () => {
     const transport = new TestTransport();
     const signed = signPayload(configuration, signingKey);
