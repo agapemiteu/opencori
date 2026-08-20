@@ -9,6 +9,7 @@ import {
 import {
   BadGatewayException,
   ConflictException,
+  ForbiddenException,
   GoneException,
   Inject,
   Injectable,
@@ -54,15 +55,23 @@ export class DeliveryService {
     if (Date.parse(envelope.expiresAt) <= now.getTime()) {
       throw new GoneException();
     }
+    const branch = this.catalog
+      .listBranches(envelope.tenantId)
+      .find((candidate) => candidate.id === envelope.branchId);
     if (
       envelope.routeKey !== "customer-care.general" ||
       this.catalog.getApplication(envelope.tenantId, envelope.applicationId) === undefined ||
-      !this.catalog
-        .listBranches(envelope.tenantId)
-        .some((branch) => branch.id === envelope.branchId) ||
+      branch === undefined ||
       !this.visits.hasActiveVisit(envelope)
     ) {
       throw new NotFoundException();
+    }
+    // Checked after the not-found conditions so a disabled branch is not
+    // distinguishable from one that never existed. A tenant switching a branch
+    // off stops delivery immediately, including for visits already in progress,
+    // which is the point of the switch during an incident.
+    if (!branch.active) {
+      throw new ForbiddenException();
     }
 
     const accepted = this.deliveries.accept(envelope, now.toISOString());

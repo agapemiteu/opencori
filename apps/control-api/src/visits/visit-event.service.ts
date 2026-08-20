@@ -7,7 +7,7 @@ import {
   type VisitEvent,
   type VisitEventIngestionReceipt,
 } from "@corri/contracts";
-import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { ForbiddenException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 
 import {
   DEMO_CATALOG_REPOSITORY,
@@ -59,6 +59,13 @@ export class VisitEventService {
       !event.demo
     ) {
       throw new NotFoundException();
+    }
+    // A branch the tenant has switched off accepts no new visits. Terminal
+    // events still go through, otherwise a visit that was already open when the
+    // branch was switched off could never be closed and would stay active for
+    // ever in the visit repository and the analytics.
+    if (!branch.active && event.eventType === "VISIT_STARTED") {
+      throw new ForbiddenException();
     }
     return visitEventIngestionReceiptSchema.parse({
       eventId: event.eventId,
