@@ -10,8 +10,16 @@ describe("parseEnvironment", () => {
       CORRI_SERVICE_VERSION: "0.0.0",
       CORRI_CORS_ORIGINS: ["http://localhost:3002"],
       WEMA_DEMO_WEBHOOK_URL: "http://127.0.0.1:3001/v1/wema/deliveries",
+      WEMA_DEMO_WEBHOOK_TIMEOUT_MS: 10_000,
       NODE_ENV: "development",
     });
+  });
+
+  it("accepts a longer webhook timeout for hosts that suspend idle services", () => {
+    expect(
+      parseEnvironment({ WEMA_DEMO_WEBHOOK_TIMEOUT_MS: "60000" }).WEMA_DEMO_WEBHOOK_TIMEOUT_MS,
+    ).toBe(60_000);
+    expect(() => parseEnvironment({ WEMA_DEMO_WEBHOOK_TIMEOUT_MS: "500" })).toThrow();
   });
 
   it("coerces a valid port and rejects an invalid port", () => {

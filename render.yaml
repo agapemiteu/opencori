@@ -43,3 +43,8 @@ services:
         sync: false
       - key: WEMA_DEMO_WEBHOOK_URL
         sync: false
+      # A free Render service takes ~50s to wake from idle. The default 10s
+      # timeout aborts before that, so the first delivery after an idle period
+      # fails with 503. Wait long enough for the receiver to come up.
+      - key: WEMA_DEMO_WEBHOOK_TIMEOUT_MS
+        value: "75000"
