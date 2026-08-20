@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3003",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "clean": "rimraf .next",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "next": "15.5.9",
@@ -13,9 +15,10 @@
     "react-dom": "19.1.0"
   },
   "devDependencies": {
-    "typescript": "5.9.3",
     "@types/node": "24.3.0",
     "@types/react": "19.1.10",
-    "@types/react-dom": "19.1.7"
+    "@types/react-dom": "19.1.7",
+    "rimraf": "catalog:",
+    "typescript": "5.9.3"
   }
 }

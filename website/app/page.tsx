@@ -23,9 +23,20 @@ type Flow =
   | "complete"
   | "passing";
 
-type EventRow = { label: string; detail: string; tone?: "ok" | "warn" | "muted" };
+interface EventRow {
+  label: string;
+  detail: string;
+  tone?: "ok" | "warn" | "muted";
+}
 
-const scenarios: { id: Scenario; name: string; caption: string }[] = [
+interface ScenarioCard {
+  id: Scenario;
+  name: string;
+  caption: string;
+}
+
+// Typed as a non-empty tuple so scenarios[0] stays a safe fallback for find().
+const scenarios: readonly [ScenarioCard, ...ScenarioCard[]] = [
   {
     id: "happy",
     name: "Normal branch visit",
@@ -94,7 +105,9 @@ export default function Page() {
   const [cipher, setCipher] = useState("");
   const [reveal, setReveal] = useState(false);
   const [visitActive, setVisitActive] = useState(false);
-  const [visitSeconds, setVisitSeconds] = useState(0);
+  // Visit duration is tracked but not yet rendered; the panel shows a fixed
+  // duration string. Kept so the presenter controls stay wired up.
+  const [, setVisitSeconds] = useState(0);
   const [events, setEvents] = useState<EventRow[]>([
     { label: "SDK_READY", detail: "Embedded in ALAT · config verified", tone: "ok" },
     {

@@ -1,3 +1,12 @@
+// Throwaway demo keypairs, generated for this repository and committed on
+// purpose so `pnpm dev` and the test suite run with no setup. They guard
+// nothing: the mock receiver is a stand-in for Wema's real endpoint, and the
+// matching public half is seeded in apps/control-api/src/demo/demo-seed.ts.
+//
+// These are not production credentials and must never become any. A real
+// receiver deployment supplies its own keypair through RECEIVER_SETTINGS and
+// keeps the private half out of the repository.
+
 export const WEMA_DEMO_ENCRYPTION_KEY_ID = "wema-demo-encryption-key-01";
 export const WEMA_DEMO_ENCRYPTION_PRIVATE_KEY = `-----BEGIN PRIVATE KEY-----
 MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQC28nHaA7/AYguK

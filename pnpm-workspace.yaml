@@ -1,9 +1,11 @@
 packages:
   - apps/*
   - packages/*
+  - website
 
 allowBuilds:
   esbuild: true
+  sharp: true
 
 overrides:
   find-my-way: 9.7.0
