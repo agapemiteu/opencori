@@ -19,6 +19,11 @@ const environmentSchema = z.object({
   // Hosts that suspend idle services need longer than a local receiver does.
   // A free Render instance takes roughly 50 seconds to wake.
   WEMA_DEMO_WEBHOOK_TIMEOUT_MS: z.coerce.number().int().min(1_000).max(120_000).default(10_000),
+  // A suspended receiver can refuse the first call outright while it wakes, so
+  // waiting longer does not help. Retrying does. Default 0 keeps a single
+  // attempt, which is what local development and the tests expect.
+  WEMA_DEMO_WEBHOOK_RETRIES: z.coerce.number().int().min(0).max(10).default(0),
+  WEMA_DEMO_WEBHOOK_RETRY_DELAY_MS: z.coerce.number().int().min(100).max(30_000).default(2_000),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 });
 

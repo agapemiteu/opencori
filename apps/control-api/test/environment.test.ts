@@ -11,6 +11,8 @@ describe("parseEnvironment", () => {
       CORRI_CORS_ORIGINS: ["http://localhost:3002"],
       WEMA_DEMO_WEBHOOK_URL: "http://127.0.0.1:3001/v1/wema/deliveries",
       WEMA_DEMO_WEBHOOK_TIMEOUT_MS: 10_000,
+      WEMA_DEMO_WEBHOOK_RETRIES: 0,
+      WEMA_DEMO_WEBHOOK_RETRY_DELAY_MS: 2_000,
       NODE_ENV: "development",
     });
   });

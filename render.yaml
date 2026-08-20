@@ -48,3 +48,9 @@ services:
       # fails with 503. Wait long enough for the receiver to come up.
       - key: WEMA_DEMO_WEBHOOK_TIMEOUT_MS
         value: "75000"
+      # A suspended receiver refuses the first calls outright while it wakes,
+      # so a longer timeout alone does not help. Retry across the wake window.
+      - key: WEMA_DEMO_WEBHOOK_RETRIES
+        value: "6"
+      - key: WEMA_DEMO_WEBHOOK_RETRY_DELAY_MS
+        value: "6000"
