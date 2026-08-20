@@ -103,8 +103,9 @@ All responses are JSON.
 | POST   | `/v1/sdk/deliveries`              | Send an encrypted request          |
 | GET    | `/v1/sdk/deliveries/:eventId`     | Delivery receipt and status        |
 
-`/v1/sdk/*` requires this header. The value comes from `publicApplicationKey`
-in `/v1/demo/catalog`:
+The SDK sends this header on `/v1/sdk/*`, and CORS allows it. The demo API
+does not enforce it yet, so requests succeed without it. The value comes from
+`publicApplicationKey` in `/v1/demo/catalog`:
 
 ```text
 x-corri-public-application-key: corri_demo_public_application_key_not_for_production
