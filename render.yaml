@@ -1,0 +1,47 @@
+# Render blueprint. Creates both backend APIs in one step.
+# In Render: New -> Blueprint -> pick this repository. Render reads this file.
+#
+# After the first deploy, set CORRI_CORS_ORIGINS on corri-control-api to the
+# real frontend URL, otherwise the browser blocks every request.
+
+services:
+  - type: web
+    name: corri-control-api
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @corri/control-api... build
+    startCommand: node apps/control-api/dist/main.js
+    healthCheckPath: /v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: CORRI_HOST
+        value: 0.0.0.0
+      - key: CORRI_SERVICE_VERSION
+        value: 1.0.0
+      # Render asks for both of these while you create the blueprint.
+      # CORRI_CORS_ORIGINS: your frontend URL, comma-separated for more than
+      #   one. No wildcards, the API rejects them.
+      # WEMA_DEMO_WEBHOOK_URL: the receiver URL below plus
+      #   /v1/wema/deliveries, once Render has given it a domain.
+      - key: CORRI_CORS_ORIGINS
+        sync: false
+      - key: WEMA_DEMO_WEBHOOK_URL
+        sync: false
+      - key: PNPM_VERSION
+        value: 11.8.0
+
+  - type: web
+    name: corri-mock-wema-receiver
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @corri/mock-wema-receiver... build
+    startCommand: node apps/mock-wema-receiver/dist/main.js
+    healthCheckPath: /v1/wema/messages
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PNPM_VERSION
+        value: 11.8.0

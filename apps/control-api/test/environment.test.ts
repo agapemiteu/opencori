@@ -19,6 +19,11 @@ describe("parseEnvironment", () => {
     expect(() => parseEnvironment({ CORRI_PORT: "70000" })).toThrow();
   });
 
+  it("falls back to a host-assigned PORT but lets CORRI_PORT win", () => {
+    expect(parseEnvironment({ PORT: "10000" }).CORRI_PORT).toBe(10_000);
+    expect(parseEnvironment({ PORT: "10000", CORRI_PORT: "3000" }).CORRI_PORT).toBe(3_000);
+  });
+
   it("parses an explicit CORS origin allow-list and rejects wildcards", () => {
     expect(
       parseEnvironment({

@@ -9,9 +9,13 @@
 
 ## 🚀 Live Demo
 
-- **Live Application:** TODO: add the deployed URL before submission
-- **Backend API:** TODO: add the deployed control-api URL before submission
+- **Live Application:** <https://corri-live.vercel.app>
+- **Backend API:** not deployed yet. See [Put the backend online](#-put-the-backend-online-10-minutes)
 - **Recorded Demo:** TODO: add the Loom walkthrough link before submission
+
+**Nothing to install.** Open the link, pick a scenario on the left, and press
+**Run this journey**. Seven scenarios are included, such as a normal branch
+visit, a customer just walking past, and the bank's endpoint being down.
 
 ---
 
@@ -48,9 +52,6 @@ private key, so the relay moves ciphertext it cannot open. The same SDK state
 machine handles approach, confirmation, visit timing, and exit, and the demo
 reports delivery latency, visit duration, and privacy-safe evidence.
 
-Status: the backend flow and the SDK work end to end and are covered by tests.
-The visual ALAT, receiver, and developer-console screens are still being built.
-
 ---
 
 ## 🛠️ Tech Stack
@@ -58,94 +59,161 @@ The visual ALAT, receiver, and developer-console screens are still being built.
 - **Frontend:** Next.js 16 (ALAT demo) and Next.js 15 (live site), React 19, Tailwind CSS 4
 - **Backend:** NestJS 11 on Fastify, TypeScript, Zod for contract validation
 - **Database:** In-memory repositories. The demo stores no customer data, by design
-- **Deployment:** Vercel
+- **Deployment:** Vercel for the frontend, Render for the backend
 - **Crypto:** Node Web Crypto, AES-256-GCM payload encryption with RSA-OAEP key wrapping
 - **Tooling:** pnpm workspaces, Turborepo, Vitest, ESLint, Prettier, tsup
 
 ---
 
-## ⚙️ How to Set Up and Run Locally
+## ⚙️ Run It On Your Computer
 
-Requires Node.js 22.14+ and pnpm 11+.
+You need two things installed first:
 
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/Wema-Hackaholics-Hackathon/wema-hackaholics7-0-hackathon-yabatech-project-repro.git
-   ```
-
-2. Navigate to the project directory:
+1. **Node.js 22.14 or newer.** Download from <https://nodejs.org>. Pick the LTS
+   button. Click through the installer.
+2. **pnpm.** After Node is installed, open a terminal and run:
 
    ```bash
-   cd wema-hackaholics7-0-hackathon-yabatech-project-repro
+   npm install -g pnpm
    ```
 
-3. Install dependencies:
+Then run these four commands, one at a time:
 
-   ```bash
-   pnpm install
-   ```
+```bash
+git clone https://github.com/Wema-Hackaholics-Hackathon/wema-hackaholics7-0-hackathon-yabatech-project-repro.git
+cd wema-hackaholics7-0-hackathon-yabatech-project-repro
+pnpm install
+pnpm dev
+```
 
-4. Copy `.env.example` to `.env` and adjust if needed. The defaults work for
-   local development:
+That is it. No configuration, no database, no API keys. Everything runs with
+working defaults.
 
-   ```bash
-   CORRI_HOST=0.0.0.0
-   CORRI_PORT=3000
-   CORRI_SERVICE_VERSION=0.0.0
-   CORRI_CORS_ORIGINS=http://localhost:3002
-   NODE_ENV=development
-   WEMA_DEMO_WEBHOOK_URL=http://127.0.0.1:3001/v1/wema/deliveries
-   ```
+Now open these in your browser:
 
-5. Run the development server:
+| What                      | Address                                  |
+| ------------------------- | ---------------------------------------- |
+| Corri live site           | <http://localhost:3003>                  |
+| ALAT demo app             | <http://localhost:3002>                  |
+| Is the API alive?         | <http://localhost:3000/v1/health>        |
+| Demo branches and keys    | <http://localhost:3000/v1/demo/catalog>  |
+| Messages the bank receive | <http://localhost:3001/v1/wema/messages> |
 
-   ```bash
-   pnpm dev
-   ```
+To stop everything, press `Ctrl` and `C` in the terminal.
 
-| Service            | URL                                      |
-| ------------------ | ---------------------------------------- |
-| Corri API          | <http://localhost:3000/v1/health>        |
-| Demo configuration | <http://localhost:3000/v1/demo/catalog>  |
-| Mock Wema receiver | <http://localhost:3001/v1/wema/messages> |
-| ALAT demo frontend | <http://localhost:3002>                  |
-| Corri live site    | <http://localhost:3003>                  |
+### If something goes wrong
 
-Run `pnpm check` to execute the full quality gate: format check, lint,
-typecheck, tests, and build.
+| Problem                   | Fix                                                                   |
+| ------------------------- | --------------------------------------------------------------------- |
+| `pnpm: command not found` | Close and reopen your terminal, then try `npm install -g pnpm` again  |
+| `port already in use`     | Something else is using 3000-3003. Close it, or restart your computer |
+| Install fails partway     | Delete the `node_modules` folder and run `pnpm install` again         |
+| Wrong Node version        | Run `node --version`. It must say 22.14 or higher                     |
 
 ---
 
-## ▲ Deploying to Vercel
+## 🔌 Backend API Reference
 
-This is a pnpm + Turborepo monorepo with two deployable frontends, so link the
-whole repo rather than a single project:
+Every address below starts with a **base URL**. Locally that is
+`http://localhost:3000`. Once you deploy, it is your Render address.
 
-```bash
-vercel link --repo
+All paths begin with `/v1`. Requests and responses are JSON.
+
+### Corri API
+
+| Method | Path                              | What it does                                     |
+| ------ | --------------------------------- | ------------------------------------------------ |
+| GET    | `/v1/health`                      | Returns service status. Use it to check it is up |
+| GET    | `/v1/demo/catalog`                | Demo tenant, branches, and public keys           |
+| GET    | `/v1/demo/branches`               | The demo branch list                             |
+| POST   | `/v1/demo/configurations/publish` | Publish a signed tenant configuration            |
+| GET    | `/v1/demo/analytics`              | Delivery latency and visit duration              |
+| GET    | `/v1/demo/privacy`                | What Corri did and did not store                 |
+| GET    | `/v1/sdk/configuration`           | Signed config the SDK verifies on start          |
+| GET    | `/v1/sdk/branches/nearby`         | Branches near a coordinate                       |
+| POST   | `/v1/sdk/visits/events`           | Report approach, visit start, and exit           |
+| POST   | `/v1/sdk/deliveries`              | Send an encrypted request                        |
+| GET    | `/v1/sdk/deliveries/:eventId`     | Delivery receipt and status                      |
+
+SDK routes need this header:
+
+```text
+x-corri-public-application-key: demo-app-key
 ```
 
-That writes `.vercel/repo.json`, which is gitignored. Set the Root Directory
-per Vercel project:
+### Mock Wema receiver
 
-| Vercel project | Root Directory   | Notes                            |
-| -------------- | ---------------- | -------------------------------- |
-| Live site      | `website`        | Self-contained. Needs no backend |
-| ALAT demo      | `apps/alat-demo` | Needs a reachable control-api    |
+Stands in for the bank's real endpoint.
 
-Leave "Include files outside the Root Directory" enabled so Vercel can read
-`pnpm-workspace.yaml`, `pnpm-lock.yaml`, and the shared `packages/*`.
+| Method | Path                  | What it does                         |
+| ------ | --------------------- | ------------------------------------ |
+| GET    | `/v1/wema/messages`   | Everything the bank decrypted so far |
+| POST   | `/v1/wema/deliveries` | Where Corri delivers ciphertext      |
 
-`website` has no required environment variables. `apps/alat-demo` falls back to
-localhost defaults, so set the `NEXT_PUBLIC_*` values from `.env.example` in the
-Vercel project before deploying it. They are inlined at build time, and
-`turbo.json` includes `NEXT_PUBLIC_*` in the `build` task's cache key so changing
-one triggers a rebuild.
+### Try it right now
 
-`apps/control-api` and `apps/mock-wema-receiver` are long-running NestJS servers
-and are not configured for Vercel. Host them elsewhere, or leave the live site
-as the demo surface.
+With `pnpm dev` running, paste this into a terminal:
+
+```bash
+curl http://localhost:3000/v1/health
+curl http://localhost:3000/v1/demo/catalog
+curl http://localhost:3001/v1/wema/messages
+```
+
+---
+
+## 🌐 Put The Backend Online (10 minutes)
+
+The backend is two small servers. `render.yaml` in this repository sets up both
+at once, so you do not configure them by hand.
+
+1. Go to <https://render.com> and sign up. GitHub sign-in is fine. It is free.
+2. Click **New**, then **Blueprint**.
+3. Choose this repository. Render reads `render.yaml` and shows two services:
+   `corri-control-api` and `corri-mock-wema-receiver`.
+4. Render asks you for two values. Type these:
+   - `CORRI_CORS_ORIGINS` → `https://corri-live.vercel.app`
+   - `WEMA_DEMO_WEBHOOK_URL` → leave `http://127.0.0.1:3001/v1/wema/deliveries`
+     for now. You fix it in step 6.
+5. Click **Apply**. Wait for both services to go green. First build takes a few
+   minutes.
+6. Copy the receiver's address, which looks like
+   `https://corri-mock-wema-receiver.onrender.com`. Open `corri-control-api` →
+   **Environment**, and set `WEMA_DEMO_WEBHOOK_URL` to that address plus
+   `/v1/wema/deliveries`. Save. It redeploys itself.
+7. Check it worked by opening
+   `https://corri-control-api.onrender.com/v1/health` in your browser.
+
+Then put your control-api address in the **Backend API** field at the top of
+this README.
+
+> **Two things to know about the free plan.** Services go to sleep after about
+> 15 minutes of no traffic, and the next visit takes roughly a minute to wake
+> up. Open the link once before a demo. Also, data is kept in memory, so
+> everything resets whenever a service restarts. That is fine for the demo,
+> which seeds itself on startup.
+
+---
+
+## ▲ Deploying The Frontend
+
+The live site is already deployed. To ship a change:
+
+```bash
+vercel deploy --prod
+```
+
+The Vercel project uses **Root Directory** `website` with **Include source
+files outside of the Root Directory** switched on, because this is a pnpm
+workspace and `website` depends on files at the repository root.
+
+To also deploy the ALAT demo as a second Vercel project, set its Root Directory
+to `apps/alat-demo` and add the `NEXT_PUBLIC_*` values from `.env.example`,
+pointing `NEXT_PUBLIC_CORRI_API_BASE_URL` at your Render control-api. Those
+values are baked in at build time, so change one and redeploy.
+
+`apps/control-api` and `apps/mock-wema-receiver` are long-running servers and
+do not belong on Vercel. That is what the Render step above is for.
 
 ---
 
@@ -162,6 +230,11 @@ as the demo surface.
 | `packages/geofence-state-machine` | Approach, visit, and exit state transitions    |
 | `packages/config-verifier`        | Tenant configuration verification              |
 | `website`                         | Public site and interactive scenario demo      |
+
+## 🧪 Checks
+
+`pnpm check` runs the whole quality gate: format check, lint, typecheck, tests,
+and build. CI runs the same command on every push.
 
 ## 📚 Documentation
 

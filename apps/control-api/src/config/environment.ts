@@ -22,7 +22,10 @@ const environmentSchema = z.object({
 export type Environment = z.infer<typeof environmentSchema>;
 
 export function parseEnvironment(source: NodeJS.ProcessEnv): Environment {
-  return environmentSchema.parse(source);
+  // Hosts such as Render and Railway assign the port at runtime through PORT.
+  // CORRI_PORT still wins when it is set explicitly.
+  const resolved = source.CORRI_PORT ? source : { ...source, CORRI_PORT: source.PORT };
+  return environmentSchema.parse(resolved);
 }
 
 @Injectable()
