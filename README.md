@@ -303,6 +303,7 @@ and build. CI runs the same command on every push.
 | Add `@corri/sdk` to another app         | [SDK reference](docs/SDK.md)                             |
 | Check what Corri may store              | [Privacy boundary](docs/TRUST_BOUNDARY.md)               |
 | Where the branch coordinates came from  | [Branch seed provenance](docs/BRANCH_SEED_PROVENANCE.md) |
+| How this repo tracks the original corri | [Upstream](docs/UPSTREAM.md)                             |
 
 The demo uses in-memory storage, demo keys, and non-production branch
 coordinates. The keys in `apps/mock-wema-receiver/src/demo-keys.ts` are
