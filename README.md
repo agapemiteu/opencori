@@ -9,8 +9,9 @@
 
 ## 🚀 Live Demo
 
-- **Live Application:** <https://corri-live.vercel.app>
-- **Backend API:** TODO: add the Render URL after deploying
+- **Live Application:** <https://corri-alat-demo.vercel.app>
+- **Backend API:** <https://corri-control-api.onrender.com/v1/health>
+- **Scenario walkthrough:** <https://corri-live.vercel.app>
 - **Recorded Demo:** TODO: add the Loom link
 
 ---
@@ -102,7 +103,12 @@ All responses are JSON.
 | POST   | `/v1/sdk/deliveries`              | Send an encrypted request          |
 | GET    | `/v1/sdk/deliveries/:eventId`     | Delivery receipt and status        |
 
-`/v1/sdk/*` requires the header `x-corri-public-application-key: demo-app-key`.
+`/v1/sdk/*` requires this header. The value comes from `publicApplicationKey`
+in `/v1/demo/catalog`:
+
+```text
+x-corri-public-application-key: corri_demo_public_application_key_not_for_production
+```
 
 ### Bank receiver
 
