@@ -9,7 +9,7 @@
 
 ## 🚀 Live Demo
 
-- **Live Application:** <https://corri-live.vercel.app>
+- **Live Application:** TODO: deploying `apps/alat-demo`. Needs the backend online first
 - **Backend API:** not deployed yet. See [Put the backend online](#-put-the-backend-online-10-minutes)
 - **Recorded Demo:** TODO: add the Loom walkthrough link before submission
 
@@ -236,23 +236,43 @@ again. If you rename the receiver, also update `WEMA_DEMO_WEBHOOK_URL` in
 
 ## ▲ Deploying The Frontend
 
-The live site is already deployed. To ship a change:
+The frontend is `apps/alat-demo`, the ALAT host integration that runs on port
+3002 locally.
+
+**Deploy the backend first.** `apps/alat-demo` calls the control API while it
+starts up, and renders a full-screen error if that call fails. It is not a
+standalone page.
+
+Once the backend is live:
 
 ```bash
+vercel link
 vercel deploy --prod
 ```
 
-The Vercel project uses **Root Directory** `website` with **Include source
-files outside of the Root Directory** switched on, because this is a pnpm
-workspace and `website` depends on files at the repository root.
+In the Vercel project, set **Root Directory** to `apps/alat-demo` and switch on
+**Include source files outside of the Root Directory**, because this is a pnpm
+workspace and the app depends on `packages/*` at the repository root.
 
-To also deploy the ALAT demo as a second Vercel project, set its Root Directory
-to `apps/alat-demo` and add the `NEXT_PUBLIC_*` values from `.env.example`,
-pointing `NEXT_PUBLIC_CORRI_API_BASE_URL` at your Fly.io control-api. Those
-values are baked in at build time, so change one and redeploy.
+Then add these environment variables, pointing the first at your control API:
+
+| Variable                                | Value                    |
+| --------------------------------------- | ------------------------ |
+| `NEXT_PUBLIC_CORRI_API_BASE_URL`        | your control API address |
+| `NEXT_PUBLIC_CORRI_APP_KEY`             | `demo-app-key`           |
+| `NEXT_PUBLIC_RECEIVER_KEY_ID`           | from `/v1/demo/catalog`  |
+| `NEXT_PUBLIC_RECEIVER_PUBLIC_KEY`       | from `/v1/demo/catalog`  |
+| `NEXT_PUBLIC_CONFIG_SIGNING_KEY_ID`     | from `/v1/demo/catalog`  |
+| `NEXT_PUBLIC_CONFIG_SIGNING_PUBLIC_KEY` | from `/v1/demo/catalog`  |
+
+These are inlined at build time, so change one and redeploy.
+
+Finally, add the resulting URL to `CORRI_CORS_ORIGINS` in
+`fly.control-api.toml` and redeploy the backend, or the browser blocks every
+request.
 
 `apps/control-api` and `apps/mock-wema-receiver` are long-running servers and
-do not belong on Vercel. That is what the Fly.io step above is for.
+do not belong on Vercel. That is what the backend step above is for.
 
 ---
 
