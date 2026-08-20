@@ -12,8 +12,13 @@ RUN corepack enable
 FROM base AS build
 WORKDIR /repo
 COPY . .
-RUN pnpm install --frozen-lockfile
-# Builds both apps and every workspace package they depend on.
+# Installs only the two backends and their workspace dependencies. A plain
+# install pulls in Next and React for alat-demo and website, which the backend
+# never runs: 532 packages instead of 319, and enough memory to fail a build on
+# a small instance.
+RUN pnpm install --frozen-lockfile \
+  --filter "@corri/control-api..." \
+  --filter "@corri/mock-wema-receiver..."
 RUN pnpm --filter "@corri/control-api..." --filter "@corri/mock-wema-receiver..." build
 # Bundles each app with its workspace dependencies into a standalone tree.
 # --legacy is required because this workspace does not inject dependencies.
