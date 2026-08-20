@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1
 
-# One image definition for both backend services. Pick which one with the APP
-# build argument, wired up in fly.control-api.toml and fly.receiver.toml.
+# Builds both backend services into one image. The service that actually runs
+# is chosen at start time by dockerCommand in render.yaml, because Render
+# blueprints cannot pass Docker build arguments.
 
 FROM node:24-alpine AS base
 ENV PNPM_HOME=/pnpm
@@ -11,19 +12,19 @@ RUN corepack enable
 FROM base AS build
 WORKDIR /repo
 COPY . .
-ARG APP
 RUN pnpm install --frozen-lockfile
-# Builds the app and every workspace package it depends on.
-RUN pnpm --filter "${APP}..." build
-# Bundles the app plus its workspace dependencies into a standalone tree.
+# Builds both apps and every workspace package they depend on.
+RUN pnpm --filter "@corri/control-api..." --filter "@corri/mock-wema-receiver..." build
+# Bundles each app with its workspace dependencies into a standalone tree.
 # --legacy is required because this workspace does not inject dependencies.
-RUN pnpm --filter "${APP}" deploy --prod --legacy /out
+RUN pnpm --filter "@corri/control-api" deploy --prod --legacy /out/control-api
+RUN pnpm --filter "@corri/mock-wema-receiver" deploy --prod --legacy /out/receiver
 
 FROM base AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
-COPY --from=build /out .
+COPY --from=build /out /app
 RUN addgroup -S corri && adduser -S corri -G corri && chown -R corri:corri /app
 USER corri
-EXPOSE 8080
-CMD ["node", "dist/main.js"]
+EXPOSE 10000
+CMD ["node", "control-api/dist/main.js"]

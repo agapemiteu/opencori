@@ -1,0 +1,45 @@
+# Render blueprint. Creates both backend APIs in one step.
+# In Render: New -> Blueprint -> pick this repository.
+#
+# Both services build the same Dockerfile and differ only in which entry point
+# they run. Render sets PORT at runtime and both apps read it.
+
+services:
+  - type: web
+    name: corri-mock-wema-receiver
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: node receiver/dist/main.js
+    plan: free
+    region: frankfurt
+    healthCheckPath: /v1/wema/messages
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+  - type: web
+    name: corri-control-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: node control-api/dist/main.js
+    plan: free
+    region: frankfurt
+    healthCheckPath: /v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: CORRI_HOST
+        value: 0.0.0.0
+      - key: CORRI_SERVICE_VERSION
+        value: "1.0.0"
+      # Render prompts for these two when you create the blueprint.
+      # CORRI_CORS_ORIGINS: the deployed frontend URL. No wildcards, the API
+      #   rejects them. Comma-separated for more than one.
+      # WEMA_DEMO_WEBHOOK_URL: the receiver URL above plus
+      #   /v1/wema/deliveries, once Render has assigned it a domain.
+      - key: CORRI_CORS_ORIGINS
+        sync: false
+      - key: WEMA_DEMO_WEBHOOK_URL
+        sync: false
