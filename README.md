@@ -54,6 +54,50 @@ held afterwards.
 
 Last measured delivery took **389 milliseconds**, phone to bank.
 
+### It also times your visit
+
+The clock starts the moment you tap "Yes, I'm visiting" and stops when you
+leave. That gives the branch one number it never had: how long you were
+actually in there.
+
+Ten minutes is a normal visit. Two hours usually means something went wrong.
+Nobody attended to you, or your problem needed a manager and never got one.
+Right now a branch only finds out when a customer complains afterwards, and
+most people just leave angry instead.
+
+The bank sees the duration, not who you are. `/v1/demo/analytics` reports the
+middle and the slowest tenth across all visits, so a branch manager can see
+"half our customers are stuck here over 40 minutes" without opening anybody's
+personal record.
+
+```bash
+curl "https://corri-control-api.onrender.com/v1/demo/analytics?tenantId=wema&applicationId=alat-demo"
+```
+
+**Not built yet:** acting on it automatically. The next step is a limit, say two
+hours, that asks the customer if they are still waiting and flags the visit for
+a supervisor. The timing is already recorded. The rule that reacts to it is not
+written.
+
+### What the branch gets
+
+A bank measures everything online. How long a page took, where people gave up,
+whether they came back. Inside the building it measures almost nothing. The
+branch is the most expensive thing the bank owns and the least understood.
+
+Corri gives the branch the same feedback loop, without watching anyone in
+particular: how many people came in, what they came for, how long they stayed,
+and how they felt about it.
+
+When the visit ends, ALAT asks for a rating out of five. Rate it low and it
+offers Long Wait Time, Unresolved Issue, Crowded, Staff Unresponsive. Rate it
+high and it offers Friendly Staff, Fast Service, Issue Resolved, Clean
+Environment. Put that beside the measured duration and "long wait" stops being
+an opinion and becomes a number the branch can act on.
+
+**Not wired up yet:** the rating is collected in the app but not sent to the
+backend, so it does not reach the analytics.
+
 ---
 
 ## 🛠️ Tech Stack
