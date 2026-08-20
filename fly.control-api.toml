@@ -1,0 +1,42 @@
+# Corri control API. Deploy with:
+#   fly deploy -c fly.control-api.toml
+#
+# app names are globally unique across all of Fly. If "corri-control-api" is
+# taken, change it here and in WEMA_DEMO_WEBHOOK_URL below.
+
+app = "corri-control-api"
+primary_region = "lhr"
+
+[build]
+dockerfile = "Dockerfile"
+
+[build.args]
+APP = "@corri/control-api"
+
+[env]
+NODE_ENV = "production"
+PORT = "8080"
+CORRI_HOST = "0.0.0.0"
+CORRI_SERVICE_VERSION = "1.0.0"
+# Comma-separated allow-list. Wildcards are rejected by the API.
+CORRI_CORS_ORIGINS = "https://corri-live.vercel.app,http://localhost:3002"
+WEMA_DEMO_WEBHOOK_URL = "https://corri-mock-wema-receiver.fly.dev/v1/wema/deliveries"
+
+[http_service]
+internal_port = 8080
+force_https = true
+# State lives in memory, so keep exactly one machine and never stop it.
+auto_stop_machines = "off"
+auto_start_machines = true
+min_machines_running = 1
+
+[[http_service.checks]]
+interval = "30s"
+timeout = "5s"
+grace_period = "15s"
+method = "GET"
+path = "/v1/health"
+
+[[vm]]
+size = "shared-cpu-1x"
+memory = "512mb"

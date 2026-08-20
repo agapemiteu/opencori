@@ -1,0 +1,22 @@
+node_modules
+**/node_modules
+.git
+.github
+.pnpm-store
+.turbo
+**/.turbo
+**/.next
+**/dist
+**/coverage
+.vercel
+.claude
+.gstack
+.env
+.env.*
+!.env.example
+*.log
+*.tsbuildinfo
+docs
+
+# website/ stays in the build context on purpose. It is a workspace member, so
+# pnpm install --frozen-lockfile fails without its package.json.

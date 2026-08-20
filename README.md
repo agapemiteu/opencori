@@ -59,7 +59,7 @@ reports delivery latency, visit duration, and privacy-safe evidence.
 - **Frontend:** Next.js 16 (ALAT demo) and Next.js 15 (live site), React 19, Tailwind CSS 4
 - **Backend:** NestJS 11 on Fastify, TypeScript, Zod for contract validation
 - **Database:** In-memory repositories. The demo stores no customer data, by design
-- **Deployment:** Vercel for the frontend, Render for the backend
+- **Deployment:** Vercel for the frontend, Fly.io for the backend
 - **Crypto:** Node Web Crypto, AES-256-GCM payload encryption with RSA-OAEP key wrapping
 - **Tooling:** pnpm workspaces, Turborepo, Vitest, ESLint, Prettier, tsup
 
@@ -115,7 +115,7 @@ To stop everything, press `Ctrl` and `C` in the terminal.
 ## 🔌 Backend API Reference
 
 Every address below starts with a **base URL**. Locally that is
-`http://localhost:3000`. Once you deploy, it is your Render address.
+`http://localhost:3000`. Once you deploy, it is your Fly.io address.
 
 All paths begin with `/v1`. Requests and responses are JSON.
 
@@ -162,36 +162,75 @@ curl http://localhost:3001/v1/wema/messages
 
 ---
 
-## 🌐 Put The Backend Online (10 minutes)
+## 🌐 Put The Backend Online
 
-The backend is two small servers. `render.yaml` in this repository sets up both
-at once, so you do not configure them by hand.
+The backend is two small servers, hosted on [Fly.io](https://fly.io). They stay
+awake permanently, so there is no cold start before a demo.
 
-1. Go to <https://render.com> and sign up. GitHub sign-in is fine. It is free.
-2. Click **New**, then **Blueprint**.
-3. Choose this repository. Render reads `render.yaml` and shows two services:
-   `corri-control-api` and `corri-mock-wema-receiver`.
-4. Render asks you for two values. Type these:
-   - `CORRI_CORS_ORIGINS` → `https://corri-live.vercel.app`
-   - `WEMA_DEMO_WEBHOOK_URL` → leave `http://127.0.0.1:3001/v1/wema/deliveries`
-     for now. You fix it in step 6.
-5. Click **Apply**. Wait for both services to go green. First build takes a few
-   minutes.
-6. Copy the receiver's address, which looks like
-   `https://corri-mock-wema-receiver.onrender.com`. Open `corri-control-api` →
-   **Environment**, and set `WEMA_DEMO_WEBHOOK_URL` to that address plus
-   `/v1/wema/deliveries`. Save. It redeploys itself.
-7. Check it worked by opening
-   `https://corri-control-api.onrender.com/v1/health` in your browser.
+### One-time setup
 
-Then put your control-api address in the **Backend API** field at the top of
+1. Sign up at <https://fly.io>. A card is required even on the smallest plan.
+   Two machines this size cost a few dollars a month.
+2. Install the Fly command line tool. In PowerShell:
+
+   ```powershell
+   iwr https://fly.io/install.ps1 -useb | iex
+   ```
+
+   Close and reopen your terminal afterwards.
+
+3. Log in. This opens your browser:
+
+   ```bash
+   fly auth login
+   ```
+
+### Deploy
+
+Run these from the project folder, in this order. The receiver goes first
+because the control API points at it.
+
+```bash
+fly launch --copy-config --config fly.receiver.toml --no-deploy
+fly deploy --config fly.receiver.toml
+
+fly launch --copy-config --config fly.control-api.toml --no-deploy
+fly deploy --config fly.control-api.toml
+```
+
+`fly launch` creates the app and `fly deploy` builds and ships it. Building
+happens on Fly's servers, so you do not need Docker on your computer.
+
+Check it worked:
+
+```bash
+curl https://corri-mock-wema-receiver.fly.dev/v1/wema/messages
+curl https://corri-control-api.fly.dev/v1/health
+```
+
+Then put the control API address in the **Backend API** field at the top of
 this README.
 
-> **Two things to know about the free plan.** Services go to sleep after about
-> 15 minutes of no traffic, and the next visit takes roughly a minute to wake
-> up. Open the link once before a demo. Also, data is kept in memory, so
-> everything resets whenever a service restarts. That is fine for the demo,
-> which seeds itself on startup.
+### If a name is already taken
+
+App names are unique across the whole of Fly. If `fly launch` says the name is
+taken, open the matching `fly.*.toml`, change the `app = ` line, and run it
+again. If you rename the receiver, also update `WEMA_DEMO_WEBHOOK_URL` in
+`fly.control-api.toml` to match.
+
+### Useful commands
+
+| Command                                             | What it does             |
+| --------------------------------------------------- | ------------------------ |
+| `fly logs -c fly.control-api.toml`                  | Live logs                |
+| `fly status -c fly.control-api.toml`                | Is it running?           |
+| `fly deploy -c fly.control-api.toml`                | Ship your latest changes |
+| `fly secrets set KEY=value -c fly.control-api.toml` | Add a private value      |
+
+> **Data is kept in memory**, so everything resets when a service restarts.
+> That is fine for the demo, which seeds itself on startup. Both configs pin a
+> single machine with `auto_stop_machines = "off"`, because two machines would
+> each hold their own half of the data.
 
 ---
 
@@ -209,11 +248,11 @@ workspace and `website` depends on files at the repository root.
 
 To also deploy the ALAT demo as a second Vercel project, set its Root Directory
 to `apps/alat-demo` and add the `NEXT_PUBLIC_*` values from `.env.example`,
-pointing `NEXT_PUBLIC_CORRI_API_BASE_URL` at your Render control-api. Those
+pointing `NEXT_PUBLIC_CORRI_API_BASE_URL` at your Fly.io control-api. Those
 values are baked in at build time, so change one and redeploy.
 
 `apps/control-api` and `apps/mock-wema-receiver` are long-running servers and
-do not belong on Vercel. That is what the Render step above is for.
+do not belong on Vercel. That is what the Fly.io step above is for.
 
 ---
 
