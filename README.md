@@ -9,7 +9,7 @@
 
 ## 🚀 Live Demo
 
-- **Live Application:** TODO: deploying `apps/alat-demo`. Needs the backend online first
+- **Live Application:** <https://corri-live.vercel.app>
 - **Backend API:** not deployed yet. See [Put the backend online](#-put-the-backend-online-10-minutes)
 - **Recorded Demo:** TODO: add the Loom walkthrough link before submission
 
