@@ -10,17 +10,10 @@
 ## 🚀 Live Demo
 
 - **Live Application:** <https://corri-alat-demo.vercel.app>
-- **Backend API:** [what Corri stored](https://corri-control-api.onrender.com/v1/demo/privacy?tenantId=wema&applicationId=alat-demo) · [speed and visits](https://corri-control-api.onrender.com/v1/demo/analytics?tenantId=wema&applicationId=alat-demo) · [the bank's inbox](https://corri-mock-wema-receiver.onrender.com/v1/wema/messages)
+- **Backend API:** [what Corri stored](https://corricontrolapi-psnkmwel.b4a.run/v1/demo/privacy?tenantId=wema&applicationId=alat-demo) · [speed and visits](https://corricontrolapi-psnkmwel.b4a.run/v1/demo/analytics?tenantId=wema&applicationId=alat-demo) · [the bank's inbox](https://corrimockwemareceiver-usrognvf.b4a.run/v1/wema/messages)
 - **Recorded Demo:** TODO: add the Loom link
 
-**Before opening the live app, wake the backend.** It sleeps after 15 minutes
-on the free plan. Click both of these and wait for each to show data, then open
-the app:
-
-1. <https://corri-control-api.onrender.com/v1/health>
-2. <https://corri-mock-wema-receiver.onrender.com/v1/wema/messages>
-
-The first one can take up to a minute. That is the server starting up.
+Both backend services are always on, so the app works straight away.
 
 ---
 
@@ -54,14 +47,14 @@ Only the bank holds the key. Corri is the courier, not the reader.
 You do not have to take our word for it. The API will tell you what it kept:
 
 ```bash
-curl "https://corri-control-api.onrender.com/v1/demo/privacy?tenantId=wema&applicationId=alat-demo"
+curl "https://corricontrolapi-psnkmwel.b4a.run/v1/demo/privacy?tenantId=wema&applicationId=alat-demo"
 ```
 
 It answers `readableRequestContentStored: false` and
 `retainedEncryptedPayloadCount: 0`. No message text, no account data, nothing
 held afterwards.
 
-Last measured delivery took **389 milliseconds**, phone to bank.
+Last measured delivery took **123 milliseconds**, phone to bank.
 
 ### It also times your visit
 
@@ -80,7 +73,7 @@ middle and the slowest tenth across all visits, so a branch manager can see
 personal record.
 
 ```bash
-curl "https://corri-control-api.onrender.com/v1/demo/analytics?tenantId=wema&applicationId=alat-demo"
+curl "https://corricontrolapi-psnkmwel.b4a.run/v1/demo/analytics?tenantId=wema&applicationId=alat-demo"
 ```
 
 **Not built yet:** acting on it automatically. The next step is a limit, say two
@@ -114,7 +107,7 @@ backend, so it does not reach the analytics.
 - **Frontend:** Next.js, React, Tailwind CSS
 - **Backend:** NestJS on Fastify, TypeScript
 - **Database:** None. Nothing about the customer is stored
-- **Deployment:** Vercel (frontend), Render (backend)
+- **Deployment:** Vercel (frontend), Back4App (backend)
 - **Security:** AES-256-GCM to lock the message, RSA-OAEP to lock the key
 
 ---
@@ -125,17 +118,17 @@ backend, so it does not reach the analytics.
 
 These are live. Click them.
 
-| Link                                                                                                               | What it shows                         |
-| ------------------------------------------------------------------------------------------------------------------ | ------------------------------------- |
-| [What we stored](https://corri-control-api.onrender.com/v1/demo/privacy?tenantId=wema&applicationId=alat-demo)     | Proof no message text was kept        |
-| [Speed and visits](https://corri-control-api.onrender.com/v1/demo/analytics?tenantId=wema&applicationId=alat-demo) | Delivery time, how long people stayed |
-| [The bank's inbox](https://corri-mock-wema-receiver.onrender.com/v1/wema/messages)                                 | Messages the bank unlocked            |
-| [Branches and keys](https://corri-control-api.onrender.com/v1/demo/catalog)                                        | What the app is configured with       |
-| [Is it up](https://corri-control-api.onrender.com/v1/health)                                                       | Service status                        |
+| Link                                                                                                                 | What it shows                         |
+| -------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| [What we stored](https://corricontrolapi-psnkmwel.b4a.run/v1/demo/privacy?tenantId=wema&applicationId=alat-demo)     | Proof no message text was kept        |
+| [Speed and visits](https://corricontrolapi-psnkmwel.b4a.run/v1/demo/analytics?tenantId=wema&applicationId=alat-demo) | Delivery time, how long people stayed |
+| [The bank's inbox](https://corrimockwemareceiver-usrognvf.b4a.run/v1/wema/messages)                                  | Messages the bank unlocked            |
+| [Branches and keys](https://corricontrolapi-psnkmwel.b4a.run/v1/demo/catalog)                                        | What the app is configured with       |
+| [Is it up](https://corricontrolapi-psnkmwel.b4a.run/v1/health)                                                       | Service status                        |
 
 ### Everything else
 
-Base URL: `https://corri-control-api.onrender.com`
+Base URL: `https://corricontrolapi-psnkmwel.b4a.run`
 
 | Method | Endpoint                      | What it does                     |
 | ------ | ----------------------------- | -------------------------------- |
@@ -151,7 +144,7 @@ Base URL: `https://corri-control-api.onrender.com`
 | GET    | `/v1/sdk/deliveries/:eventId` | Did it arrive                    |
 
 The bank's side, standing in for Wema's real system. Base URL:
-`https://corri-mock-wema-receiver.onrender.com`
+`https://corrimockwemareceiver-usrognvf.b4a.run`
 
 | Method | Endpoint              | What it does               |
 | ------ | --------------------- | -------------------------- |
@@ -160,14 +153,9 @@ The bank's side, standing in for Wema's real system. Base URL:
 
 ### If the app says "failed to fetch"
 
-The backend went to sleep. The frontend on Vercel never sleeps, but the two
-backend services do, after 15 minutes of nobody using them.
-
-Open the two links at the top of this README, wait for each to show data, then
-reload the app. That is all. Opening the link is what starts the server.
-
-To stop it sleeping during a demo, point a free pinger such as cron-job.org at
-`/v1/health` every 10 minutes.
+The backend is not answering. Open
+<https://corricontrolapi-psnkmwel.b4a.run/v1/health> and check it returns
+`"status":"ok"`, then reload the app.
 
 ---
 
