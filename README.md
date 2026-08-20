@@ -10,8 +10,17 @@
 ## 🚀 Live Demo
 
 - **Live Application:** <https://corri-alat-demo.vercel.app>
-- **Backend API:** <https://corri-control-api.onrender.com/v1/health>
+- **Backend API:** [what Corri stored](https://corri-control-api.onrender.com/v1/demo/privacy?tenantId=wema&applicationId=alat-demo) · [speed and visits](https://corri-control-api.onrender.com/v1/demo/analytics?tenantId=wema&applicationId=alat-demo) · [the bank's inbox](https://corri-mock-wema-receiver.onrender.com/v1/wema/messages)
 - **Recorded Demo:** TODO: add the Loom link
+
+**Before opening the live app, wake the backend.** It sleeps after 15 minutes
+on the free plan. Click both of these and wait for each to show data, then open
+the app:
+
+1. <https://corri-control-api.onrender.com/v1/health>
+2. <https://corri-mock-wema-receiver.onrender.com/v1/wema/messages>
+
+The first one can take up to a minute. That is the server starting up.
 
 ---
 
@@ -112,6 +121,20 @@ backend, so it does not reach the analytics.
 
 ## 🔌 Backend API
 
+### See it working
+
+These are live. Click them.
+
+| Link                                                                                                               | What it shows                         |
+| ------------------------------------------------------------------------------------------------------------------ | ------------------------------------- |
+| [What we stored](https://corri-control-api.onrender.com/v1/demo/privacy?tenantId=wema&applicationId=alat-demo)     | Proof no message text was kept        |
+| [Speed and visits](https://corri-control-api.onrender.com/v1/demo/analytics?tenantId=wema&applicationId=alat-demo) | Delivery time, how long people stayed |
+| [The bank's inbox](https://corri-mock-wema-receiver.onrender.com/v1/wema/messages)                                 | Messages the bank unlocked            |
+| [Branches and keys](https://corri-control-api.onrender.com/v1/demo/catalog)                                        | What the app is configured with       |
+| [Is it up](https://corri-control-api.onrender.com/v1/health)                                                       | Service status                        |
+
+### Everything else
+
 Base URL: `https://corri-control-api.onrender.com`
 
 | Method | Endpoint                      | What it does                     |
@@ -135,8 +158,16 @@ The bank's side, standing in for Wema's real system. Base URL:
 | GET    | `/v1/wema/messages`   | Messages the bank unlocked |
 | POST   | `/v1/wema/deliveries` | Where Corri drops them off |
 
-> The backend sleeps after 15 minutes of no use, on the free plan. Open
-> `/v1/health` once and give it a minute before demoing.
+### If the app says "failed to fetch"
+
+The backend went to sleep. The frontend on Vercel never sleeps, but the two
+backend services do, after 15 minutes of nobody using them.
+
+Open the two links at the top of this README, wait for each to show data, then
+reload the app. That is all. Opening the link is what starts the server.
+
+To stop it sleeping during a demo, point a free pinger such as cron-job.org at
+`/v1/health` every 10 minutes.
 
 ---
 
