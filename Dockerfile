@@ -32,4 +32,8 @@ COPY --from=build /out /app
 RUN addgroup -S corri && adduser -S corri -G corri && chown -R corri:corri /app
 USER corri
 EXPOSE 10000
-CMD ["node", "control-api/dist/main.js"]
+# Which service this container runs. Set CORRI_SERVICE=receiver to run the mock
+# Wema receiver instead. Chosen by environment rather than by overriding the
+# command, because not every host lets you override a container's command.
+ENV CORRI_SERVICE=control-api
+CMD ["sh", "-c", "node ${CORRI_SERVICE}/dist/main.js"]

@@ -10,20 +10,21 @@ services:
     runtime: docker
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    dockerCommand: node receiver/dist/main.js
     plan: free
     region: frankfurt
     healthCheckPath: /v1/wema/messages
     envVars:
       - key: NODE_ENV
         value: production
+      # Selects which service this image runs. See the Dockerfile.
+      - key: CORRI_SERVICE
+        value: receiver
 
   - type: web
     name: corri-control-api
     runtime: docker
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    dockerCommand: node control-api/dist/main.js
     plan: free
     region: frankfurt
     healthCheckPath: /v1/health
