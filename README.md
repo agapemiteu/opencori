@@ -56,7 +56,7 @@ It answers `readableRequestContentStored: false` and
 `retainedEncryptedPayloadCount: 0`. No message text, no account data, nothing
 held afterwards.
 
-Last measured delivery took **123 milliseconds**, phone to bank.
+Last measured delivery took **382 milliseconds**, phone to bank.
 
 ### It also times your visit
 
