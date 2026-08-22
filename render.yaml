@@ -1,0 +1,56 @@
+# Render blueprint. Creates both backend APIs in one step.
+# In Render: New -> Blueprint -> pick this repository.
+#
+# Both services build the same Dockerfile and differ only in which entry point
+# they run. Render sets PORT at runtime and both apps read it.
+
+services:
+  - type: web
+    name: corri-mock-wema-receiver
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    region: frankfurt
+    healthCheckPath: /v1/wema/messages
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Selects which service this image runs. See the Dockerfile.
+      - key: CORRI_SERVICE
+        value: receiver
+
+  - type: web
+    name: corri-control-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    region: frankfurt
+    healthCheckPath: /v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: CORRI_HOST
+        value: 0.0.0.0
+      - key: CORRI_SERVICE_VERSION
+        value: "1.0.0"
+      # Set here rather than prompted, so a blueprint deploy needs no manual
+      # follow-up. Render derives service hostnames from the names above, so
+      # the receiver URL is known in advance.
+      # No wildcards in the origins list, the API rejects them.
+      - key: CORRI_CORS_ORIGINS
+        value: https://corri-alat-demo.vercel.app
+      - key: WEMA_DEMO_WEBHOOK_URL
+        value: https://corri-mock-wema-receiver.onrender.com/v1/wema/deliveries
+      # A free Render service takes ~50s to wake from idle. The default 10s
+      # timeout aborts before that, so the first delivery after an idle period
+      # fails with 503. Wait long enough for the receiver to come up.
+      - key: WEMA_DEMO_WEBHOOK_TIMEOUT_MS
+        value: "75000"
+      # A suspended receiver refuses the first calls outright while it wakes,
+      # so a longer timeout alone does not help. Retry across the wake window.
+      - key: WEMA_DEMO_WEBHOOK_RETRIES
+        value: "6"
+      - key: WEMA_DEMO_WEBHOOK_RETRY_DELAY_MS
+        value: "6000"

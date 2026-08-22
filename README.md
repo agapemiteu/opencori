@@ -10,10 +10,12 @@
 ## 🚀 Live Demo
 
 - **Live Application:** <https://corri-alat-demo.vercel.app>
-- **Backend API:** [what Corri stored](https://corricontrolapi-psnkmwel.b4a.run/v1/demo/privacy?tenantId=wema&applicationId=alat-demo) · [speed and visits](https://corricontrolapi-psnkmwel.b4a.run/v1/demo/analytics?tenantId=wema&applicationId=alat-demo) · [the bank's inbox](https://corrimockwemareceiver-usrognvf.b4a.run/v1/wema/messages)
+- **Backend API:** [what Corri stored](https://corri-control-api.onrender.com/v1/demo/privacy?tenantId=wema&applicationId=alat-demo) · [speed and visits](https://corri-control-api.onrender.com/v1/demo/analytics?tenantId=wema&applicationId=alat-demo) · [the bank's inbox](https://corri-mock-wema-receiver.onrender.com/v1/wema/messages)
 - **Recorded Demo:** TODO: add the Loom link
 
-Both backend services are always on, so the app works straight away.
+The backend sleeps when nobody is using it. If the app shows an error, open
+<https://corri-control-api.onrender.com/v1/health>, wait for it to answer, then
+reload. That takes up to a minute the first time and is instant afterwards.
 
 ---
 
@@ -47,7 +49,7 @@ Only the bank holds the key. Corri is the courier, not the reader.
 You do not have to take our word for it. The API will tell you what it kept:
 
 ```bash
-curl "https://corricontrolapi-psnkmwel.b4a.run/v1/demo/privacy?tenantId=wema&applicationId=alat-demo"
+curl "https://corri-control-api.onrender.com/v1/demo/privacy?tenantId=wema&applicationId=alat-demo"
 ```
 
 It answers `readableRequestContentStored: false` and
@@ -73,7 +75,7 @@ middle and the slowest tenth across all visits, so a branch manager can see
 personal record.
 
 ```bash
-curl "https://corricontrolapi-psnkmwel.b4a.run/v1/demo/analytics?tenantId=wema&applicationId=alat-demo"
+curl "https://corri-control-api.onrender.com/v1/demo/analytics?tenantId=wema&applicationId=alat-demo"
 ```
 
 **Not built yet:** acting on it automatically. The next step is a limit, say two
@@ -107,7 +109,7 @@ backend, so it does not reach the analytics.
 - **Frontend:** Next.js, React, Tailwind CSS
 - **Backend:** NestJS on Fastify, TypeScript
 - **Database:** None. Nothing about the customer is stored
-- **Deployment:** Vercel (frontend), Back4App (backend)
+- **Deployment:** Vercel (frontend), Render (backend)
 - **Security:** AES-256-GCM to lock the message, RSA-OAEP to lock the key
 
 ---
@@ -118,17 +120,17 @@ backend, so it does not reach the analytics.
 
 These are live. Click them.
 
-| Link                                                                                                                 | What it shows                         |
-| -------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
-| [What we stored](https://corricontrolapi-psnkmwel.b4a.run/v1/demo/privacy?tenantId=wema&applicationId=alat-demo)     | Proof no message text was kept        |
-| [Speed and visits](https://corricontrolapi-psnkmwel.b4a.run/v1/demo/analytics?tenantId=wema&applicationId=alat-demo) | Delivery time, how long people stayed |
-| [The bank's inbox](https://corrimockwemareceiver-usrognvf.b4a.run/v1/wema/messages)                                  | Messages the bank unlocked            |
-| [Branches and keys](https://corricontrolapi-psnkmwel.b4a.run/v1/demo/catalog)                                        | What the app is configured with       |
-| [Is it up](https://corricontrolapi-psnkmwel.b4a.run/v1/health)                                                       | Service status                        |
+| Link                                                                                                               | What it shows                         |
+| ------------------------------------------------------------------------------------------------------------------ | ------------------------------------- |
+| [What we stored](https://corri-control-api.onrender.com/v1/demo/privacy?tenantId=wema&applicationId=alat-demo)     | Proof no message text was kept        |
+| [Speed and visits](https://corri-control-api.onrender.com/v1/demo/analytics?tenantId=wema&applicationId=alat-demo) | Delivery time, how long people stayed |
+| [The bank's inbox](https://corri-mock-wema-receiver.onrender.com/v1/wema/messages)                                 | Messages the bank unlocked            |
+| [Branches and keys](https://corri-control-api.onrender.com/v1/demo/catalog)                                        | What the app is configured with       |
+| [Is it up](https://corri-control-api.onrender.com/v1/health)                                                       | Service status                        |
 
 ### Everything else
 
-Base URL: `https://corricontrolapi-psnkmwel.b4a.run`
+Base URL: `https://corri-control-api.onrender.com`
 
 | Method | Endpoint                      | What it does                     |
 | ------ | ----------------------------- | -------------------------------- |
@@ -144,7 +146,7 @@ Base URL: `https://corricontrolapi-psnkmwel.b4a.run`
 | GET    | `/v1/sdk/deliveries/:eventId` | Did it arrive                    |
 
 The bank's side, standing in for Wema's real system. Base URL:
-`https://corrimockwemareceiver-usrognvf.b4a.run`
+`https://corri-mock-wema-receiver.onrender.com`
 
 | Method | Endpoint              | What it does               |
 | ------ | --------------------- | -------------------------- |
@@ -153,9 +155,14 @@ The bank's side, standing in for Wema's real system. Base URL:
 
 ### If the app says "failed to fetch"
 
-The backend is not answering. Open
-<https://corricontrolapi-psnkmwel.b4a.run/v1/health> and check it returns
-`"status":"ok"`, then reload the app.
+The backend is asleep. Open these two and wait for each to answer, then reload
+the app:
+
+1. <https://corri-control-api.onrender.com/v1/health>
+2. <https://corri-mock-wema-receiver.onrender.com/v1/wema/messages>
+
+The first request after an idle spell takes up to a minute while the server
+starts. Everything after that is fast.
 
 ---
 
