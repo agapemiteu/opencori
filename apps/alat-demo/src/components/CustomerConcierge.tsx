@@ -20,11 +20,13 @@ export function CustomerConcierge({ onNotify, onSelectService }: CustomerConcier
   const handleSendRequest = async () => {
     // Combine selected pills and the text area input into a single payload
     const finalRequestText = [
-      selectedServices.length > 0 
-        ? `Selected Services: ${selectedServices.map(s => s.label).join(", ")}` 
+      selectedServices.length > 0
+        ? `Selected Services: ${selectedServices.map((s) => s.label).join(", ")}`
         : "",
-      requestText.trim()
-    ].filter(Boolean).join(" | ");
+      requestText.trim(),
+    ]
+      .filter(Boolean)
+      .join(" | ");
 
     if (!host || !finalRequestText) return;
 
@@ -48,7 +50,7 @@ export function CustomerConcierge({ onNotify, onSelectService }: CustomerConcier
           "info",
         );
       }
-      
+
       // Auto-select the first selected service category for the feedback form
       const firstSelectedService = selectedServices[0];
       if (firstSelectedService && onSelectService) {
@@ -78,7 +80,8 @@ export function CustomerConcierge({ onNotify, onSelectService }: CustomerConcier
     });
   };
 
-  const isButtonDisabled = (selectedServices.length === 0 && !requestText.trim()) || isSendingRequest;
+  const isButtonDisabled =
+    (selectedServices.length === 0 && !requestText.trim()) || isSendingRequest;
 
   return (
     <section className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 animate-in slide-in-from-bottom-4 fade-in duration-300">
@@ -95,15 +98,15 @@ export function CustomerConcierge({ onNotify, onSelectService }: CustomerConcier
         <div className="flex flex-wrap gap-2">
           {SUGGESTED_SERVICES.map((service) => {
             const isSelected = selectedServices.some((s) => s.id === service.id);
-            
+
             return (
               <button
                 key={service.id}
                 onClick={() => handleServiceClick(service)}
                 type="button"
                 className={`min-h-11 text-xs px-3 py-1.5 rounded-full transition font-medium hover:cursor-pointer border ${
-                  isSelected 
-                    ? "bg-[#8B0068] text-white border-[#8B0068]" 
+                  isSelected
+                    ? "bg-[#8B0068] text-white border-[#8B0068]"
                     : "bg-slate-100 hover:bg-purple-50 hover:text-[#8B0068] hover:border-[#8B0068]/30 text-slate-700 border-slate-200"
                 }`}
               >
