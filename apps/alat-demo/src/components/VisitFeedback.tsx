@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useCorri } from "./CorriProvider";
-import { FEEDBACK_CATEGORIES, type FeedbackCategory } from "./service-options";
+import { FEEDBACK_CATEGORIES } from "./service-options";
 
+// Changed initialCategory to an array of strings
 interface VisitFeedbackProps {
   show: boolean;
   onClose: () => void;
-  initialCategory?: FeedbackCategory | undefined;
+  initialCategories?: string[]; 
 }
 
 const POSITIVE_TAGS = ["Friendly Staff", "Fast Service", "Issue Resolved", "Clean Environment"];
@@ -15,21 +16,24 @@ const CRITICAL_TAGS = ["Long Wait Time", "Unresolved Issue", "Crowded", "Staff U
 
 type Step = "form" | "summary" | "success";
 
-export function VisitFeedback({ show, onClose, initialCategory }: VisitFeedbackProps) {
+export function VisitFeedback({ show, onClose, initialCategories = [] }: VisitFeedbackProps) {
   const { activeBranchName } = useCorri();
   
   const [step, setStep] = useState<Step>("form");
   const [rating, setRating] = useState<number>(0);
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  
+  // Changed from a single string to an array
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Auto-select multiple categories when the modal opens
   useEffect(() => {
-    if (show && initialCategory) {
-      setSelectedCategory(initialCategory);
+    if (show && initialCategories.length > 0) {
+      setSelectedCategories(initialCategories);
     }
-  }, [initialCategory, show]);
+  }, [initialCategories, show]);
 
   if (!show) return null;
 
@@ -38,6 +42,13 @@ export function VisitFeedback({ show, onClose, initialCategory }: VisitFeedbackP
   const toggleTag = (tag: string) => {
     setSelectedTags((previous) =>
       previous.includes(tag) ? previous.filter((item) => item !== tag) : [...previous, tag],
+    );
+  };
+
+  // New toggle function for multiple categories
+  const toggleCategory = (category: string) => {
+    setSelectedCategories((previous) =>
+      previous.includes(category) ? previous.filter((item) => item !== category) : [...previous, category]
     );
   };
 
@@ -51,11 +62,10 @@ export function VisitFeedback({ show, onClose, initialCategory }: VisitFeedbackP
     // Simulate secure backend API dispatch
     await new Promise((resolve) => setTimeout(resolve, 1200));
     
-    // Log the payload that would be sent
     console.log("Dispatching Feedback Payload:", {
       branch: activeBranchName,
       rating,
-      category: selectedCategory,
+      categories: selectedCategories, // Now sending an array
       tags: selectedTags,
       comment,
     });
@@ -65,9 +75,8 @@ export function VisitFeedback({ show, onClose, initialCategory }: VisitFeedbackP
 
     setTimeout(() => {
       onClose();
-      // Reset form state for next time
       setRating(0);
-      setSelectedCategory("");
+      setSelectedCategories([]);
       setSelectedTags([]);
       setComment("");
       setStep("form");
@@ -77,7 +86,6 @@ export function VisitFeedback({ show, onClose, initialCategory }: VisitFeedbackP
   return (
     <section className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 animate-in slide-in-from-bottom-4 fade-in duration-300 w-full max-w-md mx-auto">
       
-      {/* STEP 1: FEEDBACK FORM */}
       {step === "form" && (
         <div className="space-y-6">
           <div>
@@ -111,8 +119,8 @@ export function VisitFeedback({ show, onClose, initialCategory }: VisitFeedbackP
             <div className="space-y-5 animate-in fade-in slide-in-from-top-2">
               <div>
                 <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                  What service did you come for?{" "}
-                  {initialCategory && (
+                  What services did you come for?{" "}
+                  {initialCategories.length > 0 && (
                     <span className="text-purple-600 font-normal lowercase">
                       (auto-selected from your request)
                     </span>
@@ -122,9 +130,9 @@ export function VisitFeedback({ show, onClose, initialCategory }: VisitFeedbackP
                   {FEEDBACK_CATEGORIES.map((category) => (
                     <button
                       key={category}
-                      onClick={() => setSelectedCategory(category)}
+                      onClick={() => toggleCategory(category)}
                       className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border hover:cursor-pointer ${
-                        selectedCategory === category
+                        selectedCategories.includes(category)
                           ? "bg-slate-900 text-white border-slate-900 shadow-xs"
                           : "bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300"
                       }`}
@@ -135,6 +143,7 @@ export function VisitFeedback({ show, onClose, initialCategory }: VisitFeedbackP
                 </div>
               </div>
 
+              {/* Tags Section */}
               <div>
                 <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                   {rating <= 3 ? "What could we improve?" : "What stood out?"}
@@ -198,10 +207,16 @@ export function VisitFeedback({ show, onClose, initialCategory }: VisitFeedbackP
               </div>
             </div>
 
-            {selectedCategory && (
-              <div className="flex justify-between items-center border-b border-slate-200 pb-3">
-                <span className="text-sm text-slate-500">Service</span>
-                <span className="text-sm font-medium text-slate-800">{selectedCategory}</span>
+            {selectedCategories.length > 0 && (
+              <div className="border-b border-slate-200 pb-3">
+                <span className="text-sm text-slate-500 block mb-2">Services</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedCategories.map(cat => (
+                    <span key={cat} className="bg-slate-800 text-white text-[11px] px-2 py-1 rounded-md">
+                      {cat}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
 
