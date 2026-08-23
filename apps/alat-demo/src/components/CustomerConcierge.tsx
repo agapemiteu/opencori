@@ -6,7 +6,7 @@ import { SUGGESTED_SERVICES, type FeedbackCategory } from "./service-options";
 
 interface CustomerConciergeProps {
   onNotify: (message: string, type: "success" | "error" | "info") => void;
-  onSelectService?: (category: FeedbackCategory) => void;
+  onSelectService: (services: FeedbackCategory[]) => void;
 }
 
 export function CustomerConcierge({ onNotify, onSelectService }: CustomerConciergeProps) {
@@ -54,7 +54,7 @@ export function CustomerConcierge({ onNotify, onSelectService }: CustomerConcier
       // Auto-select the first selected service category for the feedback form
       const firstSelectedService = selectedServices[0];
       if (firstSelectedService && onSelectService) {
-        onSelectService(firstSelectedService.feedbackCategory);
+        onSelectService(selectedServices.map(s => s.label as FeedbackCategory));
       }
 
       // Reset form

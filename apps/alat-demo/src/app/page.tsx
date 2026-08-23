@@ -20,8 +20,10 @@ export default function DashboardPage() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [hasCompletedVisit, setHasCompletedVisit] = useState(false);
   const [snoozedBranch, setSnoozedBranch] = useState<SnoozedBranch | null>(null);
+  
+  // 1. UPDATE: Change state to hold an array of categories
+  const [selectedServices, setSelectedServices] = useState<FeedbackCategory[]>([]);
   const [snoozeTimeLeft, setSnoozeTimeLeft] = useState<number | null>(null);
-  const [selectedService, setSelectedService] = useState<FeedbackCategory | undefined>();
 
   const showNotify = useCallback((message: string, type: "success" | "error" | "info" = "info") => {
     setNotification({ message, type });
@@ -126,7 +128,7 @@ export default function DashboardPage() {
     try {
       const completion = await host.corri.completeVisitManually();
       showNotify(
-        `Visit ended with the visit details documented. Visit Duration: ${completion.durationSeconds} seconds.`,
+        `Visit ended with the visit details documented for review. Visit Duration: ${completion.durationSeconds} seconds.`,
         "success",
       );
       setTimer({ active: false, elapsedSeconds: 0 });
@@ -273,13 +275,17 @@ export default function DashboardPage() {
         </div>
 
         {isVisiting && !showFeedback && !hasCompletedVisit && (
-          <CustomerConcierge onNotify={showNotify} onSelectService={setSelectedService} />
+          <CustomerConcierge
+            onNotify={showNotify}
+            onSelectService={setSelectedServices}
+          />
         )}
 
+        {/* 3. UPDATE: Change prop from initialCategory to initialCategories */}
         <VisitFeedback
           show={showFeedback}
           onClose={() => setShowFeedback(false)}
-          initialCategory={selectedService}
+          initialCategories={selectedServices}
         />
       </div>
 
