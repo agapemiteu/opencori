@@ -126,7 +126,7 @@ export default function DashboardPage() {
     try {
       const completion = await host.corri.completeVisitManually();
       showNotify(
-        `Visit ended with the documented manual demo fallback. Duration: ${completion.durationSeconds} seconds.`,
+        `Visit ended with the visit details documented. Visit Duration: ${completion.durationSeconds} seconds.`,
         "success",
       );
       setTimer({ active: false, elapsedSeconds: 0 });

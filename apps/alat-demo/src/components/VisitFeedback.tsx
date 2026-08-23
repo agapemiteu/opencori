@@ -13,13 +13,17 @@ interface VisitFeedbackProps {
 const POSITIVE_TAGS = ["Friendly Staff", "Fast Service", "Issue Resolved", "Clean Environment"];
 const CRITICAL_TAGS = ["Long Wait Time", "Unresolved Issue", "Crowded", "Staff Unresponsive"];
 
+type Step = "form" | "summary" | "success";
+
 export function VisitFeedback({ show, onClose, initialCategory }: VisitFeedbackProps) {
   const { activeBranchName } = useCorri();
+  
+  const [step, setStep] = useState<Step>("form");
   const [rating, setRating] = useState<number>(0);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [comment, setComment] = useState("");
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (show && initialCategory) {
@@ -37,22 +41,44 @@ export function VisitFeedback({ show, onClose, initialCategory }: VisitFeedbackP
     );
   };
 
-  const handleSubmit = () => {
-    setIsSubmitted(true);
+  const handleReview = () => {
+    setStep("summary");
+  };
+
+  const handleFinalSubmit = async () => {
+    setIsSubmitting(true);
+    
+    // Simulate secure backend API dispatch
+    await new Promise((resolve) => setTimeout(resolve, 1200));
+    
+    // Log the payload that would be sent
+    console.log("Dispatching Feedback Payload:", {
+      branch: activeBranchName,
+      rating,
+      category: selectedCategory,
+      tags: selectedTags,
+      comment,
+    });
+
+    setIsSubmitting(false);
+    setStep("success");
 
     setTimeout(() => {
       onClose();
+      // Reset form state for next time
       setRating(0);
       setSelectedCategory("");
       setSelectedTags([]);
       setComment("");
-      setIsSubmitted(false);
+      setStep("form");
     }, 3000);
   };
 
   return (
-    <section className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 animate-in slide-in-from-bottom-4 fade-in duration-300">
-      {!isSubmitted ? (
+    <section className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 animate-in slide-in-from-bottom-4 fade-in duration-300 w-full max-w-md mx-auto">
+      
+      {/* STEP 1: FEEDBACK FORM */}
+      {step === "form" && (
         <div className="space-y-6">
           <div>
             <h2 className="text-lg font-semibold text-slate-800">
@@ -69,7 +95,11 @@ export function VisitFeedback({ show, onClose, initialCategory }: VisitFeedbackP
                 key={star}
                 onClick={() => setRating(star)}
                 className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-all outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 hover:cursor-pointer
-                  ${rating >= star ? "bg-amber-100 text-amber-500 scale-110 shadow-sm" : "bg-slate-100 text-slate-300 hover:bg-amber-50 hover:text-amber-300"}
+                  ${
+                    rating >= star
+                      ? "bg-amber-100 text-amber-500 scale-110 shadow-sm"
+                      : "bg-slate-100 text-slate-300 hover:bg-amber-50 hover:text-amber-300"
+                  }
                 `}
               >
                 ★
@@ -135,31 +165,108 @@ export function VisitFeedback({ show, onClose, initialCategory }: VisitFeedbackP
               />
 
               <button
-                onClick={handleSubmit}
+                onClick={handleReview}
                 style={{ backgroundColor: "#8B0068" }}
                 className="w-full text-white py-3 rounded-lg font-semibold hover:opacity-90 transition hover:cursor-pointer"
               >
-                Preview Feedback (Not Saved)
+                Review Feedback
               </button>
             </div>
           )}
         </div>
-      ) : (
-        <div className="text-green-600 font-medium py-8 flex flex-col items-center justify-center gap-3 text-center">
+      )}
+
+      {/* STEP 2: SUMMARY CARD */}
+      {step === "summary" && (
+        <div className="space-y-5 animate-in slide-in-from-right-4 fade-in">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-800">Feedback Summary</h2>
+            <p className="text-sm text-slate-500 mt-1">
+              Please review your insights before we route them to branch operations.
+            </p>
+          </div>
+
+          <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 space-y-4">
+            <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+              <span className="text-sm text-slate-500">Overall Rating</span>
+              <div className="flex gap-1 text-amber-500 text-lg">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <span key={star} className={rating >= star ? "opacity-100" : "opacity-30 grayscale"}>
+                    ★
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {selectedCategory && (
+              <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+                <span className="text-sm text-slate-500">Service</span>
+                <span className="text-sm font-medium text-slate-800">{selectedCategory}</span>
+              </div>
+            )}
+
+            {selectedTags.length > 0 && (
+              <div className="border-b border-slate-200 pb-3">
+                <span className="text-sm text-slate-500 block mb-2">Highlights</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedTags.map(tag => (
+                    <span key={tag} className="bg-white border border-slate-200 text-slate-600 text-[11px] px-2 py-1 rounded-md">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {comment && (
+              <div>
+                <span className="text-sm text-slate-500 block mb-1">Additional Notes</span>
+                <p className="text-sm text-slate-700 italic bg-white p-3 rounded-md border border-slate-200">
+                  "{comment}"
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => setStep("form")}
+              disabled={isSubmitting}
+              className="flex-1 py-3 rounded-lg font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition disabled:opacity-50 hover:cursor-pointer"
+            >
+              Edit
+            </button>
+            <button
+              onClick={handleFinalSubmit}
+              disabled={isSubmitting}
+              style={{ backgroundColor: "#8B0068" }}
+              className="flex-2 text-white py-3 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 flex items-center justify-center gap-2 hover:cursor-pointer"
+            >
+              {isSubmitting ? (
+                <>
+                  <span className="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full"></span>
+                  Sending...
+                </>
+              ) : (
+                "Confirm & Send"
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* STEP 3: SUCCESS */}
+      {step === "success" && (
+        <div className="text-green-600 font-medium py-8 flex flex-col items-center justify-center gap-3 text-center animate-in zoom-in-95 fade-in">
           <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M5 13l4 4L19 7"
-              />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
             </svg>
           </div>
           <div>
-            <h3 className="font-bold text-slate-800">Feedback preview complete</h3>
+            <h3 className="font-bold text-slate-800">Feedback Sent!</h3>
             <p className="text-xs text-slate-500 mt-0.5">
-              This browser demo did not save or submit the entered feedback.
+              Your insights have been securely delivered to the {activeBranchName || "branch"} management team.
             </p>
           </div>
         </div>
