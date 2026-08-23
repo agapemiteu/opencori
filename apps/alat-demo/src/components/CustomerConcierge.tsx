@@ -12,20 +12,28 @@ interface CustomerConciergeProps {
 export function CustomerConcierge({ onNotify, onSelectService }: CustomerConciergeProps) {
   const { host, isVisiting, activeBranchName } = useCorri();
   const [requestText, setRequestText] = useState("");
-  const [requestCategory, setRequestCategory] = useState<FeedbackCategory | undefined>();
+  const [selectedServices, setSelectedServices] = useState<typeof SUGGESTED_SERVICES>([]);
   const [isSendingRequest, setIsSendingRequest] = useState(false);
 
   if (!isVisiting) return null;
 
   const handleSendRequest = async () => {
-    if (!host || !requestText.trim()) return;
+    // Combine selected pills and the text area input into a single payload
+    const finalRequestText = [
+      selectedServices.length > 0 
+        ? `Selected Services: ${selectedServices.map(s => s.label).join(", ")}` 
+        : "",
+      requestText.trim()
+    ].filter(Boolean).join(" | ");
+
+    if (!host || !finalRequestText) return;
 
     setIsSendingRequest(true);
     try {
       if (!process.env.NEXT_PUBLIC_RECEIVER_PUBLIC_KEY) {
         throw new Error("The demo receiver encryption key is not configured. Request not sent.");
       }
-      const receipt = await host.sendCustomerRequest(requestText);
+      const receipt = await host.sendCustomerRequest(finalRequestText);
       if (["FAILED", "EXPIRED", "DEAD_LETTERED"].includes(receipt.state)) {
         throw new Error(`Encrypted request delivery ended in ${receipt.state}.`);
       }
@@ -40,11 +48,16 @@ export function CustomerConcierge({ onNotify, onSelectService }: CustomerConcier
           "info",
         );
       }
-      if (requestCategory !== undefined) {
-        onSelectService?.(requestCategory);
+      
+      // Auto-select the first selected service category for the feedback form
+      const firstSelectedService = selectedServices[0];
+      if (firstSelectedService && onSelectService) {
+        onSelectService(firstSelectedService.feedbackCategory);
       }
+
+      // Reset form
       setRequestText("");
-      setRequestCategory(undefined);
+      setSelectedServices([]);
     } catch (error) {
       onNotify(error instanceof Error ? error.message : "Failed to send secure request.", "error");
     } finally {
@@ -53,9 +66,19 @@ export function CustomerConcierge({ onNotify, onSelectService }: CustomerConcier
   };
 
   const handleServiceClick = (service: (typeof SUGGESTED_SERVICES)[number]) => {
-    setRequestText(service.label);
-    setRequestCategory(service.feedbackCategory);
+    setSelectedServices((prev) => {
+      const isSelected = prev.some((s) => s.id === service.id);
+      if (isSelected) {
+        // Remove it if it's already selected
+        return prev.filter((s) => s.id !== service.id);
+      } else {
+        // Add it if it's not selected
+        return [...prev, service];
+      }
+    });
   };
+
+  const isButtonDisabled = (selectedServices.length === 0 && !requestText.trim()) || isSendingRequest;
 
   return (
     <section className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 animate-in slide-in-from-bottom-4 fade-in duration-300">
@@ -70,35 +93,40 @@ export function CustomerConcierge({ onNotify, onSelectService }: CustomerConcier
           Suggested Services
         </p>
         <div className="flex flex-wrap gap-2">
-          {SUGGESTED_SERVICES.map((service) => (
-            <button
-              key={service.id}
-              onClick={() => handleServiceClick(service)}
-              type="button"
-              className="min-h-11 text-xs bg-slate-100 hover:bg-purple-50 hover:text-[#8B0068] hover:border-[#8B0068]/30 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-full transition font-medium hover:cursor-pointer"
-            >
-              {service.label}
-            </button>
-          ))}
+          {SUGGESTED_SERVICES.map((service) => {
+            const isSelected = selectedServices.some((s) => s.id === service.id);
+            
+            return (
+              <button
+                key={service.id}
+                onClick={() => handleServiceClick(service)}
+                type="button"
+                className={`min-h-11 text-xs px-3 py-1.5 rounded-full transition font-medium hover:cursor-pointer border ${
+                  isSelected 
+                    ? "bg-[#8B0068] text-white border-[#8B0068]" 
+                    : "bg-slate-100 hover:bg-purple-50 hover:text-[#8B0068] hover:border-[#8B0068]/30 text-slate-700 border-slate-200"
+                }`}
+              >
+                {service.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       <div className="space-y-3">
         <textarea
           value={requestText}
-          onChange={(event) => {
-            setRequestText(event.target.value);
-            setRequestCategory(undefined);
-          }}
-          placeholder="E.g., I need to request a new debit card..."
+          onChange={(event) => setRequestText(event.target.value)}
+          placeholder="Any additional details or custom requests? (optional)"
           className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#8B0068] focus:border-transparent outline-none resize-none text-slate-700 text-sm"
           rows={3}
         />
         <button
           onClick={handleSendRequest}
-          disabled={!requestText.trim() || isSendingRequest}
+          disabled={isButtonDisabled}
           style={{
-            backgroundColor: !requestText.trim() || isSendingRequest ? "#cbd5e1" : "#8B0068",
+            backgroundColor: isButtonDisabled ? "#cbd5e1" : "#8B0068",
           }}
           className="w-full text-white py-3 rounded-lg font-semibold hover:opacity-90 transition disabled:cursor-not-allowed text-sm hover:cursor-pointer"
         >
