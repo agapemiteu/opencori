@@ -54,6 +54,16 @@ Corri lives inside ALAT. No new app, no new account.
 
 **Only the bank holds the key. Corri is the courier, not the reader.**
 
+### What the customer gets
+
+Your complaint is already at the counter before you are. The teller has read it,
+pulled your account and, if it needs a manager or a card printed, started that
+while you were still in the queue. You stop repeating yourself, and the problem
+gets resolved in one visit instead of "come back tomorrow".
+
+You also opt in each time. No new app, no new account, and if you say you are
+just passing by, nothing is sent at all.
+
 Check that yourself:
 
 ```bash
@@ -79,6 +89,16 @@ sees the number without opening anybody's record.
 **How it felt.** After the visit ALAT asks for a rating. Score it low and it
 offers Long Wait Time, Unresolved Issue, Crowded, Staff Unresponsive. Put that
 beside the measured duration and "long wait" stops being an opinion.
+
+**Which branch, and which team.** Every visit carries the branch it happened at,
+so Wema can compare Marina against Ikeja on volume and waiting time. And because
+only the bank can decrypt a request, only the bank can see what each customer
+came for: card issuance, account opening, loans, complaints. That tells the bank
+which department is clearing its queue and which is the bottleneck. Corri never
+sees any of it, so the insight belongs to the bank alone.
+
+Today the numbers are totalled across all branches. The data is already tagged
+by branch and by service, so grouping it is the next step, not a rebuild.
 
 ---
 
@@ -164,6 +184,8 @@ No configuration, no database, no keys. Then open:
 - Opening hours and holidays, so the bank controls availability automatically
 - A dwell limit that asks the customer if they are still waiting and flags a
   supervisor
+- Break the analytics down by branch and by department, so managers can compare
+  performance across the network
 - Send the visit rating to the backend so it reaches the analytics
 
 More detail in [docs/](docs/): the [SDK reference](docs/SDK.md) and
