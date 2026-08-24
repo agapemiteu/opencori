@@ -20,7 +20,7 @@ export default function DashboardPage() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [hasCompletedVisit, setHasCompletedVisit] = useState(false);
   const [snoozedBranch, setSnoozedBranch] = useState<SnoozedBranch | null>(null);
-  
+
   // 1. UPDATE: Change state to hold an array of categories
   const [selectedServices, setSelectedServices] = useState<FeedbackCategory[]>([]);
   const [snoozeTimeLeft, setSnoozeTimeLeft] = useState<number | null>(null);
@@ -275,10 +275,7 @@ export default function DashboardPage() {
         </div>
 
         {isVisiting && !showFeedback && !hasCompletedVisit && (
-          <CustomerConcierge
-            onNotify={showNotify}
-            onSelectService={setSelectedServices}
-          />
+          <CustomerConcierge onNotify={showNotify} onSelectService={setSelectedServices} />
         )}
 
         {/* 3. UPDATE: Change prop from initialCategory to initialCategories */}

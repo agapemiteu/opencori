@@ -54,7 +54,7 @@ export function CustomerConcierge({ onNotify, onSelectService }: CustomerConcier
       // Auto-select the first selected service category for the feedback form
       const firstSelectedService = selectedServices[0];
       if (firstSelectedService && onSelectService) {
-        onSelectService(selectedServices.map(s => s.label as FeedbackCategory));
+        onSelectService(selectedServices.map((s) => s.label as FeedbackCategory));
       }
 
       // Reset form
