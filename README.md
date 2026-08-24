@@ -90,15 +90,22 @@ sees the number without opening anybody's record.
 offers Long Wait Time, Unresolved Issue, Crowded, Staff Unresponsive. Put that
 beside the measured duration and "long wait" stops being an opinion.
 
-**Which branch, and which team.** Every visit carries the branch it happened at,
-so Wema can compare Marina against Ikeja on volume and waiting time. And because
-only the bank can decrypt a request, only the bank can see what each customer
-came for: card issuance, account opening, loans, complaints. That tells the bank
-which department is clearing its queue and which is the bottleneck. Corri never
-sees any of it, so the insight belongs to the bank alone.
+**Which team is doing well.** The rating is already attached to what the
+customer came for, because the feedback form carries the services through from
+their request. Five stars on Card Issuance and two stars on Loan Services are
+not the same signal. Collect a few hundred and the bank has a satisfaction score
+per department, built from customers who were actually there that day, instead
+of a survey nobody fills in. Complaints stop being anecdotes about "the branch"
+and start pointing at the counter that needs help.
 
-Today the numbers are totalled across all branches. The data is already tagged
-by branch and by service, so grouping it is the next step, not a rebuild.
+**Which branch.** Every visit carries the branch it happened at, so Marina and
+Ikeja can be compared on volume, waiting time and rating. And because only the
+bank can decrypt a request, only the bank can see what any of it was about.
+Corri never sees it, so the insight belongs to the bank alone.
+
+Today the ratings stay in the app and the numbers are totalled across all
+branches. The data is already tagged by branch and by service, so sending the
+rating and grouping the results is the next step, not a rebuild.
 
 ---
 
@@ -184,9 +191,8 @@ No configuration, no database, no keys. Then open:
 - Opening hours and holidays, so the bank controls availability automatically
 - A dwell limit that asks the customer if they are still waiting and flags a
   supervisor
-- Break the analytics down by branch and by department, so managers can compare
-  performance across the network
-- Send the visit rating to the backend so it reaches the analytics
+- Send the visit rating to the backend, then group it by branch and by
+  department, so managers can see satisfaction per team across the network
 
 More detail in [docs/](docs/): the [SDK reference](docs/SDK.md) and
 [what Corri may store](docs/TRUST_BOUNDARY.md).
