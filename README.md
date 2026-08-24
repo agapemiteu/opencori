@@ -1,7 +1,7 @@
 # Corri
 
-Tell a bank branch what you came for, without anyone in the middle being able to
-read it.
+Walk into a bank and be expected. Corri tells the branch what you need before
+you reach the counter, and cannot read the message itself.
 
 ## Team Members
 
@@ -24,15 +24,22 @@ read it.
 
 ## 🎯 The Problem
 
-> **How might we** let a customer tell a bank branch what they came for, without
-> the app in the middle being able to read it?
+> **How might we** make a branch visit feel expected, so customers are served
+> faster instead of queueing and explaining themselves from scratch?
 
-You join the queue. You reach the counter and explain your problem from scratch.
-The teller starts from zero. Everybody waits.
+You take a number and wait. Twenty minutes, an hour, sometimes longer. You get
+to the counter and start from zero: who you are, what you need, what went wrong.
+The teller opens your account while you talk. Nobody in that branch knew you
+were coming, or why.
 
-Sending the message ahead fixes the queue and creates a worse problem: whoever
-runs that service now holds your complaint, your account details, and a record
-of which branch you were in and when.
+The branch is just as blind. It cannot see how many people are inside, what they
+came for, or who has been sitting there an hour. It finds out a visit went badly
+only if the customer complains, and most people just leave annoyed.
+
+The obvious fix is to let people say what they need before they arrive. But
+every version of that hands a middleman your complaints, your account details,
+and a record of which branch you were in and when. Fixing the queue by creating
+a privacy problem is not a fix.
 
 ## ✨ Our Solution
 
