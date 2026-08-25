@@ -15,42 +15,43 @@ you reach the counter, and cannot read the message itself.
 - **Live Application:** <https://corri-alat-demo.vercel.app>
 - **Recorded Demo:** TODO: add the Loom link
 
-### Wake the backend first
+### Wake the backends first
 
-Both services run on Render's free plan and suspend after 15 minutes without
-traffic. Waking one takes up to a minute. **There are two of them, and waking
-only the first is not enough**: sending a request goes app -> control API ->
-receiver, so a sleeping receiver fails the send even when the app itself loads.
+Both backends run on Render's free plan and sleep after 15 minutes without
+traffic. Waking one takes about 25 seconds. **There are two, and the order
+matters**: a send goes app -> control API -> receiver, so the receiver has to be
+awake before the control API calls it.
 
-Open both links and wait until each one answers, in this order:
+Open these two in a browser, in this order, and wait until each shows text:
 
 1. **Receiver** <https://corri-mock-wema-receiver.onrender.com/v1/wema/messages>
-2. **Control API** <https://corri-control-api.onrender.com/v1/health>
+   shows `[]` or a list of messages
+2. **Control API** <https://corri-control-api.onrender.com/v1/health> shows
+   `{"status":"ok",...}`
 
-Or from a terminal. The retry flags matter: a waking service refuses the first
-calls outright, so a plain `curl` returns an error instead of waiting for it.
+If a tab looks blank or errors, refresh it once. That is the service still
+booting, not a failure. Then open the app. It stays instant until 15 minutes of
+no traffic, so do this two minutes before demoing.
+
+From a terminal instead, receiver first:
 
 ```bash
-curl -sS --fail --max-time 150 --retry 3 --retry-all-errors --retry-delay 5   https://corri-mock-wema-receiver.onrender.com/v1/wema/messages
-curl -sS --fail --max-time 150 --retry 3 --retry-all-errors --retry-delay 5   https://corri-control-api.onrender.com/v1/health
+curl -sS --fail --retry 3 --retry-all-errors --retry-delay 5 --max-time 150 https://corri-mock-wema-receiver.onrender.com/v1/wema/messages
+curl -sS --fail --retry 3 --retry-all-errors --retry-delay 5 --max-time 150 https://corri-control-api.onrender.com/v1/health
 ```
 
-On Windows PowerShell, call `curl.exe`. Plain `curl` there is an alias for
-`Invoke-WebRequest`, which does not take these flags.
+The retry flags are not optional. A waking service refuses the first calls, so a
+plain `curl` reports an error on exactly the case you are testing for. On Windows
+PowerShell type `curl.exe`: plain `curl` there is an alias for
+`Invoke-WebRequest` and ignores these flags.
 
-The receiver returns a JSON list, the control API returns `{"status":"ok",...}`.
-Once both have answered, reload the app and everything is instant until they go
-idle again. Do this two minutes before demoing.
+**If you skip this:** the app sits on its loading screen, or the concierge sits
+on "Encrypting & Sending..." and then reports a fetch error. Both mean a service
+is still asleep, not that the demo is broken. Wake them and try again.
 
-Opening the app also starts both wakes by itself, so a send is unlikely to fail
-even if you forget. The loading screen is the part that still waits, because the
-app cannot start until the control API answers. Waking them yourself is what
-removes that wait.
-
-**What it looks like if you skip this:** the app hangs on its loading screen, or
-the concierge sits on "Encrypting & Sending..." and then reports a fetch or
-transport error. Both mean a service is still asleep, not that the demo is
-broken. Wake them and send again.
+The app does start both wakes itself when it loads, so a send rarely fails even
+if you forget. What you skip is the wait, because the app cannot finish loading
+until the control API answers.
 
 ### Run the demo
 
