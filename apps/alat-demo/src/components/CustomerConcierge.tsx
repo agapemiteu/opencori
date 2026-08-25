@@ -51,10 +51,14 @@ export function CustomerConcierge({ onNotify, onSelectService }: CustomerConcier
         );
       }
 
-      // Auto-select the first selected service category for the feedback form
-      const firstSelectedService = selectedServices[0];
-      if (firstSelectedService && onSelectService) {
-        onSelectService(selectedServices.map((s) => s.label as FeedbackCategory));
+      // Carry the chosen services into the feedback form. Send the category,
+      // not the label: the feedback form matches against FEEDBACK_CATEGORIES
+      // ("Card Issuance"), while a label is the customer-facing wording ("Card
+      // Pickup / Replacement"). Passing labels type-checks only because of a
+      // cast, and nothing matches, so the form claimed an auto-selection it had
+      // not made.
+      if (selectedServices.length > 0) {
+        onSelectService(selectedServices.map((service) => service.feedbackCategory));
       }
 
       // Reset form
