@@ -14,6 +14,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   CorriClient,
+  CorriNetworkError,
   CorriTransportError,
   FetchCorriTransport,
   createCorriClient,
@@ -326,6 +327,27 @@ describe("CorriClient", () => {
         applicationId: configuration.applicationId,
       }),
     ).rejects.toEqual(new CorriTransportError(503));
+
+    // A browser reports every unreachable host as the same bare "Failed to
+    // fetch". Rejecting with that verbatim leaves the caller unable to tell a
+    // sleeping backend from a bad base URL, so it is translated.
+    const unreachable = new FetchCorriTransport("https://corri.example", "key", async () => {
+      throw new TypeError("Failed to fetch");
+    });
+    const rejection = await unreachable
+      .fetchConfiguration({
+        tenantId: configuration.tenantId,
+        applicationId: configuration.applicationId,
+      })
+      .then(
+        () => undefined,
+        (error: unknown) => error,
+      );
+    expect(rejection).toBeInstanceOf(CorriNetworkError);
+    expect((rejection as CorriNetworkError).url).toBe(
+      "https://corri.example/v1/sdk/configuration?tenantId=wema&applicationId=alat-demo",
+    );
+    expect((rejection as CorriNetworkError).cause).toBeInstanceOf(TypeError);
   });
 
   it("enforces initialization, configuration, consent, and stable-exit preconditions", async () => {

@@ -46,11 +46,22 @@ services:
       # A free Render service takes ~50s to wake from idle. The default 10s
       # timeout aborts before that, so the first delivery after an idle period
       # fails with 503. Wait long enough for the receiver to come up.
+      #
+      # The retry budget must stay under the ~100s request timeout of the proxy
+      # in front of Render. When the control API holds the browser's POST open
+      # for longer, the proxy cuts the connection and the error page it returns
+      # carries no CORS header, so the browser reports a bare "Failed to fetch"
+      # instead of the 503 this service would have sent. Worst case here is
+      # 3 x 20s of attempts plus 2 x 3s of backoff, which is 66s.
+      #
+      # The keep-warm workflow in .github/workflows should mean the receiver is
+      # never cold in the first place. This budget is the fallback for when a
+      # scheduled run is skipped or delayed.
       - key: WEMA_DEMO_WEBHOOK_TIMEOUT_MS
-        value: "75000"
+        value: "20000"
       # A suspended receiver refuses the first calls outright while it wakes,
       # so a longer timeout alone does not help. Retry across the wake window.
       - key: WEMA_DEMO_WEBHOOK_RETRIES
-        value: "6"
+        value: "2"
       - key: WEMA_DEMO_WEBHOOK_RETRY_DELAY_MS
-        value: "6000"
+        value: "3000"

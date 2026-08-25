@@ -1,0 +1,46 @@
+# Both demo backends run on Render's free plan, which suspends a service after
+# 15 minutes without traffic. Waking one takes roughly 50 seconds, and the
+# customer request path is browser -> control API -> receiver, so a cold
+# receiver stalls a send for long enough that the proxy in front of Render cuts
+# the browser's connection. Pinging both on a schedule keeps them resident.
+#
+# This also protects visit state. The control API keeps visits in memory, so a
+# suspend mid-visit drops the active visit and the next delivery 404s while the
+# UI still shows the visit as in progress.
+#
+# GitHub runs scheduled workflows on a best-effort basis and can delay them
+# under load, so treat this as a reduction in cold starts, not a guarantee. Use
+# an external uptime pinger if the demo has to be reliable to the minute.
+name: Keep demo backends warm
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: keep-warm
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+
+    steps:
+      # The receiver goes first. It is the one the control API has to reach
+      # within its webhook timeout, so it is the one that must already be up.
+      - name: Wake the mock Wema receiver
+        run: |
+          curl --silent --show-error --fail --output /dev/null \
+            --max-time 150 --retry 2 --retry-all-errors --retry-delay 10 \
+            https://corri-mock-wema-receiver.onrender.com/v1/wema/messages
+
+      - name: Wake the control API
+        run: |
+          curl --silent --show-error --fail --output /dev/null \
+            --max-time 150 --retry 2 --retry-all-errors --retry-delay 10 \
+            https://corri-control-api.onrender.com/v1/health

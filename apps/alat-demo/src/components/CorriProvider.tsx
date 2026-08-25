@@ -39,6 +39,12 @@ export function CorriProvider({ children }: { children: React.ReactNode }) {
           process.env.NEXT_PUBLIC_CONFIG_SIGNING_KEY_ID || "wema-test-config-key";
         const configSigningPublicKeyPem = process.env.NEXT_PUBLIC_CONFIG_SIGNING_PUBLIC_KEY || "";
 
+        // The hosted demo backend sleeps when idle and takes about a minute to
+        // wake. Start that wake on page load rather than on the first send, so
+        // the customer is not the one waiting for it. Failures are ignored on
+        // purpose: this is a nudge, and initialize() below reports real errors.
+        void fetch(`${apiBaseUrl.replace(/\/$/, "")}/v1/health`).catch(() => undefined);
+
         // Passed as 3 positional arguments
         const transport = new FetchCorriTransport(apiBaseUrl, publicAppKey, (url, config) =>
           fetch(url, config),

@@ -700,6 +700,26 @@ export class CorriTransportError extends Error {
   }
 }
 
+/**
+ * The request never produced a response: the host is unreachable, the
+ * connection was cut, or a proxy returned an error page without the CORS
+ * headers the browser needs to read it. A browser surfaces all of those as the
+ * same bare "Failed to fetch", which tells a caller nothing about what to do
+ * next, so name the condition and say what usually fixes it.
+ */
+export class CorriNetworkError extends Error {
+  constructor(
+    readonly url: string,
+    options?: { cause?: unknown },
+  ) {
+    super(
+      "Corri could not reach the API. The demo backend may still be waking up, so wait about a minute and send again.",
+      options,
+    );
+    this.name = "CorriNetworkError";
+  }
+}
+
 export class FetchCorriTransport implements CorriTransport {
   private readonly baseUrl: string;
 
@@ -767,14 +787,20 @@ export class FetchCorriTransport implements CorriTransport {
     path: string,
     init: { method: "GET" | "POST"; body?: string },
   ): Promise<unknown> {
-    const response = await this.fetcher(`${this.baseUrl}${path}`, {
-      ...init,
-      headers: {
-        accept: "application/json",
-        "content-type": "application/json",
-        "x-corri-public-application-key": this.publicApplicationKey,
-      },
-    });
+    const url = `${this.baseUrl}${path}`;
+    let response: CorriHttpResponse;
+    try {
+      response = await this.fetcher(url, {
+        ...init,
+        headers: {
+          accept: "application/json",
+          "content-type": "application/json",
+          "x-corri-public-application-key": this.publicApplicationKey,
+        },
+      });
+    } catch (cause) {
+      throw new CorriNetworkError(url, { cause });
+    }
     if (!response.ok) {
       throw new CorriTransportError(response.status);
     }
