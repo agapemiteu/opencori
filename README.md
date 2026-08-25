@@ -38,10 +38,31 @@ The receiver returns a JSON list, the control API returns `{"status":"ok",...}`.
 Once both have answered, reload the app and everything is instant until they go
 idle again. Do this two minutes before demoing.
 
+Opening the app also starts both wakes by itself, so a send is unlikely to fail
+even if you forget. The loading screen is the part that still waits, because the
+app cannot start until the control API answers. Waking them yourself is what
+removes that wait.
+
 **What it looks like if you skip this:** the app hangs on its loading screen, or
 the concierge sits on "Encrypting & Sending..." and then reports a fetch or
 transport error. Both mean a service is still asleep, not that the demo is
 broken. Wake them and send again.
+
+### Run the demo
+
+In the app, in this order:
+
+1. **Sync & Start Monitoring.** Loads the branches and starts watching.
+2. **Trigger Approach (Marina).** Stands in for walking up to the branch.
+3. **Yes, I'm visiting.** Checks you in and starts the visit clock.
+4. Pick a service, then **Send Secure Request.** A green bar confirms the bank
+   unlocked it.
+5. **Complete Visit.** This is what brings up the rating form. It does not
+   appear on its own after a send.
+
+To see it from the bank's side, open
+<https://corri-mock-wema-receiver.onrender.com/v1/wema/messages>. Your request is
+in that list in plain text, because the bank holds the key and Corri does not.
 
 ---
 
