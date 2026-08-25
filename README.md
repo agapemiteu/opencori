@@ -13,12 +13,35 @@ you reach the counter, and cannot read the message itself.
 ## 🚀 Live Demo
 
 - **Live Application:** <https://corri-alat-demo.vercel.app>
-- **Backend API:** <https://corri-control-api.onrender.com/v1/health>
 - **Recorded Demo:** TODO: add the Loom link
 
-> The backend sleeps when idle. If the app shows an error, open the API link
-> above, wait for it to answer, then reload. Up to a minute the first time,
-> instant afterwards.
+### Wake the backend first
+
+Both services run on Render's free plan and suspend after 15 minutes without
+traffic. Waking one takes up to a minute. **There are two of them, and waking
+only the first is not enough**: sending a request goes app -> control API ->
+receiver, so a sleeping receiver fails the send even when the app itself loads.
+
+Open both links and wait until each one answers, in this order:
+
+1. **Receiver** <https://corri-mock-wema-receiver.onrender.com/v1/wema/messages>
+2. **Control API** <https://corri-control-api.onrender.com/v1/health>
+
+Or from a terminal:
+
+```bash
+curl https://corri-mock-wema-receiver.onrender.com/v1/wema/messages
+curl https://corri-control-api.onrender.com/v1/health
+```
+
+The receiver returns a JSON list, the control API returns `{"status":"ok",...}`.
+Once both have answered, reload the app and everything is instant until they go
+idle again. Do this two minutes before demoing.
+
+**What it looks like if you skip this:** the app hangs on its loading screen, or
+the concierge sits on "Encrypting & Sending..." and then reports a fetch or
+transport error. Both mean a service is still asleep, not that the demo is
+broken. Wake them and send again.
 
 ---
 
