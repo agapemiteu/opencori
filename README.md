@@ -27,12 +27,16 @@ Open both links and wait until each one answers, in this order:
 1. **Receiver** <https://corri-mock-wema-receiver.onrender.com/v1/wema/messages>
 2. **Control API** <https://corri-control-api.onrender.com/v1/health>
 
-Or from a terminal:
+Or from a terminal. The retry flags matter: a waking service refuses the first
+calls outright, so a plain `curl` returns an error instead of waiting for it.
 
 ```bash
-curl https://corri-mock-wema-receiver.onrender.com/v1/wema/messages
-curl https://corri-control-api.onrender.com/v1/health
+curl -sS --fail --max-time 150 --retry 3 --retry-all-errors --retry-delay 5   https://corri-mock-wema-receiver.onrender.com/v1/wema/messages
+curl -sS --fail --max-time 150 --retry 3 --retry-all-errors --retry-delay 5   https://corri-control-api.onrender.com/v1/health
 ```
+
+On Windows PowerShell, call `curl.exe`. Plain `curl` there is an alias for
+`Invoke-WebRequest`, which does not take these flags.
 
 The receiver returns a JSON list, the control API returns `{"status":"ok",...}`.
 Once both have answered, reload the app and everything is instant until they go
