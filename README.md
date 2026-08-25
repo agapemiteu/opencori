@@ -13,7 +13,7 @@ you reach the counter, and cannot read the message itself.
 ## 🚀 Live Demo
 
 - **Live Application:** <https://corri-alat-demo.vercel.app>
-- **Recorded Demo:** TODO: add the Loom link
+- **Recorded Demo:** [Loom link](https://www.loom.com/share/281fad60f91e4562b78cddfc2aadd09c)
 
 ### Wake the backends first
 
