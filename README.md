@@ -22,7 +22,7 @@ traffic. Waking one takes about 25 seconds. **There are two, and the order
 matters**: a send goes app -> control API -> receiver, so the receiver has to be
 awake before the control API calls it.
 
-Open these two in a browser, in this order, and wait until each shows text:
+Bookmark these two. Open them in this order and wait until each shows text:
 
 1. **Receiver** <https://corri-mock-wema-receiver.onrender.com/v1/wema/messages>
    shows `[]` or a list of messages
