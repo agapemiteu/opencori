@@ -206,6 +206,8 @@ The visit timer and cooldowns live on the application policy, at
 ## Storage
 
 Two implementations of one interface, chosen by whether `DATABASE_URL` is set.
+The deployed API points at Supabase Postgres; `render.yaml` marks the variable
+`sync: false` so it is set in the dashboard rather than committed here.
 
 | `DATABASE_URL` | Catalog lives in | Survives a restart |
 | -------------- | ---------------- | ------------------ |
