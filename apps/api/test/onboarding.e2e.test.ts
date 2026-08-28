@@ -260,6 +260,52 @@ describe("organisation onboarding", () => {
       expect((victimBranches.json() as { branches: unknown[] }).branches).toHaveLength(0);
     });
 
+    /**
+     * The seeded demo tenant exists but was never issued a key, so no request
+     * can write to it. These are the shapes someone would actually try.
+     */
+    it("lets nobody write to the seeded demo tenant", async () => {
+      const testApp = await createTestApplication();
+      const payload = { branches: [minimalBranch("planted")] };
+
+      const attempts = [
+        {},
+        { authorization: "Bearer " },
+        { authorization: "Bearer wema" },
+        { authorization: "Bearer null" },
+        { "x-api-key": "wema" },
+        { "x-api-key": "" },
+      ];
+
+      for (const headers of attempts) {
+        const response = await testApp.inject({
+          method: "PUT",
+          url: "/v1/tenants/wema/branches",
+          headers,
+          payload,
+        });
+        expect(response.statusCode).toBe(401);
+      }
+
+      // And nothing was planted by any of them.
+      const branches = await testApp.inject({ method: "GET", url: "/v1/branches" });
+      expect(JSON.stringify(branches.json())).not.toContain("planted");
+    });
+
+    it("will not let a real tenant's key reach the demo tenant", async () => {
+      const testApp = await createTestApplication();
+      const { apiKey } = await createTenant(testApp, "outsider-bank");
+
+      const response = await testApp.inject({
+        method: "PUT",
+        url: "/v1/tenants/wema/branches",
+        headers: { authorization: `Bearer ${apiKey}` },
+        payload: { branches: [minimalBranch("planted")] },
+      });
+
+      expect(response.statusCode).toBe(403);
+    });
+
     it("accepts the key through x-api-key as well as Bearer", async () => {
       const testApp = await createTestApplication();
       const { tenantId, apiKey } = await createTenant(testApp, "tenth-bank");

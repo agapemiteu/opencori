@@ -185,6 +185,73 @@ function runContract(name: string, create: () => Promise<CatalogRepository>): vo
       expect(await repository.getTenant("wema")).toBeDefined();
       expect((await repository.listBranches("wema")).length).toBeGreaterThan(0);
     });
+
+    it("does not duplicate the seed when it boots again", async () => {
+      const first = await create();
+      const before = (await first.listBranches("wema")).length;
+
+      // For Postgres this re-runs initialize() against a database that already
+      // has the seed, which is what every redeploy does. Seeding is
+      // ON CONFLICT DO NOTHING precisely so a redeploy neither duplicates the
+      // demo records nor resets an operator's edits to them.
+      const second = await create();
+
+      expect((await second.listBranches("wema")).length).toBe(before);
+    });
+
+    describe("API key handling", () => {
+      /**
+       * The seeded demo tenant is created without an API key, because nobody
+       * should be able to write to it. In Postgres its api_key_hash is NULL,
+       * and SQL NULL never equals anything, so no key can match it. In memory
+       * it simply has no entry. Both must refuse.
+       *
+       * If this ever fails, anyone could onboard branches into the demo tenant.
+       */
+      it("never authenticates the seeded demo tenant", async () => {
+        const repository = await create();
+        expect(await repository.getTenant("wema")).toBeDefined();
+
+        for (const attempt of ["", "wema", "null", "NULL", "undefined", "oc_anything"]) {
+          expect(await repository.findTenantIdByApiKey(attempt)).not.toBe("wema");
+        }
+      });
+
+      it("gives two tenants different keys, and each opens only its own", async () => {
+        const repository = await create();
+        const first = unique();
+        const second = unique();
+        await repository.createTenant(tenant(first), hashApiKey("key-one"));
+        await repository.createTenant(tenant(second), hashApiKey("key-two"));
+
+        expect(await repository.findTenantIdByApiKey("key-one")).toBe(first);
+        expect(await repository.findTenantIdByApiKey("key-two")).toBe(second);
+      });
+
+      it("refuses a key that is close but not equal", async () => {
+        const repository = await create();
+        const id = unique();
+        await repository.createTenant(tenant(id), hashApiKey("oc_correct-key"));
+
+        // A prefix, a suffix, and a case change must all fail: the stored value
+        // is a hash, so matching is all-or-nothing rather than partial.
+        for (const attempt of ["oc_correct-ke", "oc_correct-key ", "oc_correct-Key", "oc_", ""]) {
+          expect(await repository.findTenantIdByApiKey(attempt)).toBeUndefined();
+        }
+      });
+
+      it("stores the hash, never the key itself", async () => {
+        const repository = await create();
+        const id = unique();
+        const key = "oc_super-secret-value";
+        await repository.createTenant(tenant(id), hashApiKey(key));
+
+        // Whatever a store hands back about a tenant must not contain the key.
+        const stored = JSON.stringify(await repository.getTenant(id));
+        expect(stored).not.toContain(key);
+        expect(stored).not.toContain("super-secret");
+      });
+    });
   });
 }
 
