@@ -19,17 +19,20 @@ const publishRequestSchema = z
 export class CatalogReadController {
   constructor(@Inject(CatalogReadService) private readonly catalog: CatalogReadService) {}
 
-  @Get("catalog")
+  // The demo/ paths are what the currently deployed client calls. Kept as
+  // aliases so the API and its clients can be released independently rather
+  // than having to land in the same minute.
+  @Get(["catalog", "demo/catalog"])
   async getCatalog(): Promise<DemoCatalogResponse> {
     return this.catalog.getCatalog();
   }
 
-  @Get("branches")
+  @Get(["branches", "demo/branches"])
   async getBranches(): Promise<DemoBranchesResponse> {
     return this.catalog.getBranches();
   }
 
-  @Post("configurations/publish")
+  @Post(["configurations/publish", "demo/configurations/publish"])
   async publishConfiguration(@Body() body: unknown): Promise<SignedConfiguration> {
     const parsed = publishRequestSchema.safeParse(body);
     if (!parsed.success) {

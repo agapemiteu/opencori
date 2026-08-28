@@ -459,6 +459,31 @@ describe("organisation onboarding", () => {
     });
   });
 
+  /**
+   * The deployed client calls the demo/ paths. Until every client has moved,
+   * both families must answer, so the API and its clients can be released
+   * independently instead of having to land together.
+   */
+  it("serves the old demo paths alongside the new ones", async () => {
+    const testApp = await createTestApplication();
+
+    const pairs: readonly (readonly [string, string])[] = [
+      ["/v1/catalog", "/v1/demo/catalog"],
+      ["/v1/branches", "/v1/demo/branches"],
+      ["/v1/analytics", "/v1/demo/analytics"],
+      ["/v1/privacy", "/v1/demo/privacy"],
+    ];
+
+    for (const [current, legacy] of pairs) {
+      const now = await testApp.inject({ method: "GET", url: current });
+      const before = await testApp.inject({ method: "GET", url: legacy });
+
+      expect(now.statusCode, `${current} should answer`).toBe(200);
+      expect(before.statusCode, `${legacy} should still answer`).toBe(200);
+      expect(before.json()).toEqual(now.json());
+    }
+  });
+
   it("leaves the seeded demo tenant reachable through the existing routes", async () => {
     const testApp = await createTestApplication();
 
