@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
 
 import type { BranchInput, Tenant } from "@opencori/contracts";
-import { describe, expect, it, vi } from "vitest";
+import { afterAll, describe, expect, it, vi } from "vitest";
+import { Client } from "pg";
 
 import {
   InMemoryCatalogRepository,
@@ -279,6 +280,30 @@ describePostgres("PostgresCatalogRepository (DATABASE_URL set)", () => {
   // opens a connection and runs the schema before it starts. Vitest's 5s
   // default is a local-only assumption and fails these on latency alone.
   vi.setConfig({ testTimeout: 60_000, hookTimeout: 60_000 });
+
+  /**
+   * Every tenant this suite creates is removed afterwards.
+   *
+   * Without this the fixtures simply accumulate: pointing DATABASE_URL at the
+   * database that also backs a deployment left dozens of "t-..." tenants sitting
+   * in the live catalog. Only rows this suite created are touched, matched on
+   * the "t-" prefix its ids use, so the seeded demo tenant is never at risk.
+   */
+  afterAll(async () => {
+    const client = new Client({
+      connectionString: databaseUrl,
+      ssl: { rejectUnauthorized: false },
+    });
+    await client.connect();
+    try {
+      for (const table of ["branches", "applications"]) {
+        await client.query(`DELETE FROM ${table} WHERE tenant_id LIKE 't-%'`);
+      }
+      await client.query("DELETE FROM tenants WHERE id LIKE 't-%'");
+    } finally {
+      await client.end();
+    }
+  });
 
   runContract("PostgresCatalogRepository", async () => {
     const repository = new PostgresCatalogRepository(databaseUrl as string);
