@@ -35,13 +35,24 @@ export const createTenantRequestSchema = z
   })
   .strict();
 
+/**
+ * Registering an application.
+ *
+ * The configuration signing key is deliberately absent: OpenCori issues it, the
+ * same way it issues the API key. Signing needs the private half, so a caller
+ * supplying only a public key would leave OpenCori unable to sign anything as
+ * that application — it would fall back to some other key and every response
+ * would fail verification in the caller's own SDK.
+ *
+ * The generated public key comes back in the response. Pin that in the client.
+ */
 export const createApplicationRequestSchema = z
   .object({
     id: applicationIdSchema,
     name: z.string().min(1).max(256),
     publicApplicationKey: z.string().min(1).max(256),
-    configurationSigningKeyId: z.string().min(1).max(128),
-    configurationSigningPublicKey: z.string().min(1).max(1_024),
+    // The organisation's own receiver keypair. Only the public half is given,
+    // because only the organisation should be able to decrypt what it receives.
     receiverEncryptionKeyId: z.string().min(1).max(128),
     receiverEncryptionPublicKey: z.string().min(1).max(4_096),
     // Omit to accept the defaults. This is where the visit timer lives:

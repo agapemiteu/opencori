@@ -143,21 +143,24 @@ function runContract(name: string, create: () => Promise<CatalogRepository>): vo
       const repository = await create();
       const id = unique();
       await repository.createTenant(tenant(id), hashApiKey(unique()));
-      await repository.createApplication({
-        id: "app",
-        tenantId: id,
-        name: "App",
-        publicApplicationKey: "pk",
-        configurationSigningKeyId: "sign-1",
-        configurationSigningPublicKey: "public",
-        receiverEncryptionKeyId: "enc-1",
-        receiverEncryptionPublicKey: "public",
-        active: true,
-        demo: false,
-        createdAt: now.toISOString(),
-        updatedAt: now.toISOString(),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any);
+      await repository.createApplication(
+        {
+          id: "app",
+          tenantId: id,
+          name: "App",
+          publicApplicationKey: "pk",
+          configurationSigningKeyId: "sign-1",
+          configurationSigningPublicKey: "public",
+          receiverEncryptionKeyId: "enc-1",
+          receiverEncryptionPublicKey: "public",
+          active: true,
+          demo: false,
+          createdAt: now.toISOString(),
+          updatedAt: now.toISOString(),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+        "PRIVATE_KEY_PEM",
+      );
 
       expect(await repository.getPolicy(id, "app")).toBeUndefined();
 

@@ -1,4 +1,9 @@
-import { createTenantResponseSchema, upsertBranchesResponseSchema } from "@opencori/contracts";
+import {
+  createTenantResponseSchema,
+  signedNearbyBranchesResponseSchema,
+  upsertBranchesResponseSchema,
+} from "@opencori/contracts";
+import { verifySignedPayload } from "@opencori/config-verifier";
 import { Test } from "@nestjs/testing";
 import type { NestFastifyApplication } from "@nestjs/platform-fastify";
 import { afterEach, describe, expect, it } from "vitest";
@@ -334,9 +339,6 @@ describe("organisation onboarding", () => {
           id: "mobile",
           name: "Mobile App",
           publicApplicationKey: "pk_test",
-          configurationSigningKeyId: "sign-1",
-          configurationSigningPublicKey:
-            "-----BEGIN PUBLIC KEY-----\nabc\n-----END PUBLIC KEY-----",
           receiverEncryptionKeyId: "enc-1",
           receiverEncryptionPublicKey: "-----BEGIN PUBLIC KEY-----\ndef\n-----END PUBLIC KEY-----",
         },
@@ -371,6 +373,89 @@ describe("organisation onboarding", () => {
 
       expect(updated.statusCode).toBe(200);
       expect(updated.json()).toMatchObject({ maximumVisitDurationSeconds: 3_600 });
+    });
+  });
+
+  describe("configuration signing", () => {
+    /**
+     * An onboarded application must be able to verify what it receives using
+     * the key it was given. Before this, every response was signed with the
+     * seeded demo key regardless of tenant, so a real organisation's client
+     * pinned one key and was sent another — every verification would fail.
+     */
+    it("signs a tenant's responses with the key that tenant was issued", async () => {
+      const testApp = await createTestApplication();
+      const { tenantId, apiKey } = await createTenant(testApp, "signing-bank");
+      const headers = { authorization: `Bearer ${apiKey}` };
+
+      const created = await testApp.inject({
+        method: "POST",
+        url: `/v1/tenants/${tenantId}/applications`,
+        headers,
+        payload: {
+          id: "mobile",
+          name: "Mobile App",
+          publicApplicationKey: "pk_test",
+          receiverEncryptionKeyId: "enc-1",
+          receiverEncryptionPublicKey: "-----BEGIN PUBLIC KEY-----\nabc\n-----END PUBLIC KEY-----",
+        },
+      });
+      expect(created.statusCode).toBe(201);
+
+      const application = created.json() as {
+        configurationSigningKeyId: string;
+        configurationSigningPublicKey: string;
+      };
+      // Issued by OpenCori, not supplied by the caller.
+      expect(application.configurationSigningKeyId).toBe("signing-bank-mobile-config-key");
+      expect(application.configurationSigningPublicKey).toContain("BEGIN PUBLIC KEY");
+
+      await testApp.inject({
+        method: "PUT",
+        url: `/v1/tenants/${tenantId}/branches`,
+        headers,
+        payload: {
+          branches: [
+            {
+              ...minimalBranch("marina"),
+              latitude: 6.4531,
+              longitude: 3.3958,
+              coordinateQuality: "VERIFIED",
+            },
+          ],
+        },
+      });
+
+      const nearby = await testApp.inject({
+        method: "GET",
+        url: `/v1/sdk/branches/nearby?tenantId=${tenantId}&applicationId=mobile&lat=6.4531&lng=3.3958&radiusKm=5&limit=5`,
+      });
+      expect(nearby.statusCode).toBe(200);
+
+      const signed = signedNearbyBranchesResponseSchema.parse(nearby.json());
+      expect(signed.keyId).toBe(application.configurationSigningKeyId);
+      // The signature verifies against the tenant's key, and not against the
+      // demo key that used to sign everything.
+      expect(
+        verifySignedPayload(signed, {
+          keyId: application.configurationSigningKeyId,
+          publicKeyPem: application.configurationSigningPublicKey,
+        }),
+      ).toBe(true);
+      expect(signed.keyId).not.toBe("wema-demo-config-key-01");
+    });
+
+    it("still signs the seeded demo application with the demo key", async () => {
+      const testApp = await createTestApplication();
+      const nearby = await testApp.inject({
+        method: "GET",
+        url: "/v1/sdk/branches/nearby?tenantId=wema&applicationId=alat-demo&lat=6.4531&lng=3.3958&radiusKm=5&limit=5",
+      });
+
+      // The published SDK and the reference client pin this key. It must not move.
+      expect(signedNearbyBranchesResponseSchema.parse(nearby.json()).keyId).toBe(
+        "wema-demo-config-key-01",
+      );
     });
   });
 

@@ -12,7 +12,7 @@ import { signPayload } from "@opencori/config-verifier";
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 
 import { CLOCK, type Clock } from "../platform/clock.js";
-import { CATALOG_REPOSITORY, type CatalogReader } from "./catalog.repository.js";
+import { CATALOG_REPOSITORY, type CatalogRepository } from "./catalog.repository.js";
 import {
   DEMO_CONFIGURATION_KEY_ID,
   DEMO_CONFIGURATION_PRIVATE_KEY,
@@ -23,7 +23,7 @@ import {
 export class CatalogReadService {
   constructor(
     @Inject(CATALOG_REPOSITORY)
-    private readonly repository: CatalogReader,
+    private readonly repository: CatalogRepository,
     @Inject(CLOCK) private readonly clock: Clock,
   ) {}
 
@@ -58,6 +58,13 @@ export class CatalogReadService {
     tenantId: string,
     applicationId: string,
   ): Promise<SignedConfiguration> {
+    // Signed with the key OpenCori issued this application, falling back to the
+    // demo key for the seeded application, which was never issued one.
+    const signingKey = (await this.repository.getSigningKey(tenantId, applicationId)) ?? {
+      keyId: DEMO_CONFIGURATION_KEY_ID,
+      privateKeyPem: DEMO_CONFIGURATION_PRIVATE_KEY,
+    };
+
     const application = await this.repository.getApplication(tenantId, applicationId);
     if (application === undefined) {
       throw new NotFoundException();
@@ -90,11 +97,6 @@ export class CatalogReadService {
       },
     });
 
-    return signedConfigurationSchema.parse(
-      signPayload(payload, {
-        keyId: DEMO_CONFIGURATION_KEY_ID,
-        privateKeyPem: DEMO_CONFIGURATION_PRIVATE_KEY,
-      }),
-    );
+    return signedConfigurationSchema.parse(signPayload(payload, signingKey));
   }
 }

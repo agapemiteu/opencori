@@ -141,7 +141,8 @@ Receiver, standing in for the receiving organisation's own system:
 
 ## Onboarding your own locations
 
-Two calls. The first gives you a key; the second uploads your locations.
+Two calls to get locations in. A third — registering an application — is what
+the client SDK needs before it can ask for them.
 
 ```bash
 # 1. Register. The apiKey comes back once and is never shown again.
@@ -169,6 +170,27 @@ That is the whole required shape. The geofence radii default to 250 m approach,
 100 m visit, 150 m exit; add `latitude` and `longitude` when you have them.
 Upload is idempotent by `id`, so re-sending your whole location file moves only
 what changed.
+
+Then register the application your client embeds. OpenCori issues the
+configuration signing key and returns the public half — pin that in your client,
+because it is what your responses are signed with:
+
+```bash
+curl -sX POST http://localhost:3000/v1/tenants/your-bank/applications \
+  -H "authorization: Bearer $OPENCORI_API_KEY" \
+  -H 'content-type: application/json' \
+  -d '{
+        "id":"mobile",
+        "name":"Your Banking App",
+        "publicApplicationKey":"pk_live_yourbank",
+        "receiverEncryptionKeyId":"receiver-key-1",
+        "receiverEncryptionPublicKey":"-----BEGIN PUBLIC KEY-----\n...\n-----END PUBLIC KEY-----\n"
+      }'
+```
+
+You supply the receiver encryption public key, because only you should be able
+to decrypt what your customers send. You do not supply the signing key: signing
+needs the private half, so OpenCori generates the pair and keeps that half.
 
 To switch a location off, or change its radii:
 

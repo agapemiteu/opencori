@@ -8,7 +8,7 @@ import {
 import { signPayload } from "@opencori/config-verifier";
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 
-import { CATALOG_REPOSITORY, type CatalogReader } from "../catalog/catalog.repository.js";
+import { CATALOG_REPOSITORY, type CatalogRepository } from "../catalog/catalog.repository.js";
 import {
   DEMO_CONFIGURATION_KEY_ID,
   DEMO_CONFIGURATION_PRIVATE_KEY,
@@ -42,7 +42,7 @@ function distanceMeters(
 export class NearbyBranchesService {
   constructor(
     @Inject(CATALOG_REPOSITORY)
-    private readonly repository: CatalogReader,
+    private readonly repository: CatalogRepository,
     @Inject(CLOCK) private readonly clock: Clock,
   ) {}
 
@@ -51,6 +51,17 @@ export class NearbyBranchesService {
     if (application === undefined) {
       throw new NotFoundException();
     }
+
+    // An onboarded application signs with the key OpenCori issued it, which is
+    // the public half its client pinned. The seeded demo application has none,
+    // so it keeps the demo key the existing clients already pin.
+    const signingKey = (await this.repository.getSigningKey(
+      query.tenantId,
+      query.applicationId,
+    )) ?? {
+      keyId: DEMO_CONFIGURATION_KEY_ID,
+      privateKeyPem: DEMO_CONFIGURATION_PRIVATE_KEY,
+    };
 
     const maximumDistanceMeters = query.radiusKm * 1_000;
     const branches: NearbyBranch[] = (await this.repository.listBranches(query.tenantId))
@@ -78,11 +89,6 @@ export class NearbyBranchesService {
       branches,
     });
 
-    return signedNearbyBranchesResponseSchema.parse(
-      signPayload(payload, {
-        keyId: DEMO_CONFIGURATION_KEY_ID,
-        privateKeyPem: DEMO_CONFIGURATION_PRIVATE_KEY,
-      }),
-    );
+    return signedNearbyBranchesResponseSchema.parse(signPayload(payload, signingKey));
   }
 }

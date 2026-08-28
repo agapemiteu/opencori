@@ -1,3 +1,5 @@
+import { generateKeyPairSync } from "node:crypto";
+
 import {
   applicationSchema,
   branchSchema,
@@ -94,13 +96,21 @@ export class CatalogService {
     }
 
     const timestamp = this.clock.now().toISOString();
+
+    // OpenCori issues the configuration signing key rather than accepting one.
+    // Signing needs the private half, so a caller-supplied public key would
+    // leave nothing able to sign as this application. The public half is
+    // returned once here and is what the client pins.
+    const { publicKey, privateKey } = generateKeyPairSync("ed25519");
+    const configurationSigningKeyId = `${tenantId}-${request.id}-config-key`;
+
     const application = applicationSchema.parse({
       id: request.id,
       tenantId,
       name: request.name,
       publicApplicationKey: request.publicApplicationKey,
-      configurationSigningKeyId: request.configurationSigningKeyId,
-      configurationSigningPublicKey: request.configurationSigningPublicKey,
+      configurationSigningKeyId,
+      configurationSigningPublicKey: publicKey.export({ type: "spki", format: "pem" }).toString(),
       receiverEncryptionKeyId: request.receiverEncryptionKeyId,
       receiverEncryptionPublicKey: request.receiverEncryptionPublicKey,
       active: true,
@@ -109,7 +119,10 @@ export class CatalogService {
       updatedAt: timestamp,
     });
 
-    await this.repository.createApplication(application);
+    await this.repository.createApplication(
+      application,
+      privateKey.export({ type: "pkcs8", format: "pem" }).toString(),
+    );
     await this.repository.setPolicy(tenantId, application.id, request.policy ?? DEFAULT_POLICY);
     return application;
   }

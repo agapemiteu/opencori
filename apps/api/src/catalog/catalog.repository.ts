@@ -41,7 +41,15 @@ export interface CatalogRepository extends CatalogReader {
   /** The tenant this key authenticates, or undefined if it authenticates none. */
   findTenantIdByApiKey(apiKey: string): Promise<string | undefined>;
 
-  createApplication(application: Application): Promise<void>;
+  /**
+   * Stores the application together with the private half of the signing key
+   * OpenCori issued for it. The private half never leaves this repository.
+   */
+  createApplication(application: Application, signingPrivateKeyPem: string): Promise<void>;
+  getSigningKey(
+    tenantId: string,
+    applicationId: string,
+  ): Promise<{ keyId: string; privateKeyPem: string } | undefined>;
   getPolicy(tenantId: string, applicationId: string): Promise<GeofencePolicy | undefined>;
   setPolicy(tenantId: string, applicationId: string, policy: GeofencePolicy): Promise<void>;
 
@@ -93,6 +101,7 @@ export class InMemoryCatalogRepository implements CatalogRepository {
   readonly #apiKeyHashes = new Map<string, string>();
   readonly #applications = new Map<string, Application>();
   readonly #policies = new Map<string, GeofencePolicy>();
+  readonly #signingKeys = new Map<string, string>();
   readonly #branches = new Map<string, Map<string, Branch>>();
 
   constructor() {
@@ -136,8 +145,23 @@ export class InMemoryCatalogRepository implements CatalogRepository {
     return undefined;
   }
 
-  async createApplication(application: Application): Promise<void> {
-    this.#applications.set(applicationKey(application.tenantId, application.id), application);
+  async createApplication(application: Application, signingPrivateKeyPem: string): Promise<void> {
+    const key = applicationKey(application.tenantId, application.id);
+    this.#applications.set(key, application);
+    this.#signingKeys.set(key, signingPrivateKeyPem);
+  }
+
+  async getSigningKey(
+    tenantId: string,
+    applicationId: string,
+  ): Promise<{ keyId: string; privateKeyPem: string } | undefined> {
+    const key = applicationKey(tenantId, applicationId);
+    const privateKeyPem = this.#signingKeys.get(key);
+    const application = this.#applications.get(key);
+    if (privateKeyPem === undefined || application === undefined) {
+      return undefined;
+    }
+    return { keyId: application.configurationSigningKeyId, privateKeyPem };
   }
 
   async getPolicy(tenantId: string, applicationId: string): Promise<GeofencePolicy | undefined> {

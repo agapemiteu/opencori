@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS applications (
   application_id text NOT NULL,
   data           jsonb NOT NULL,
   policy         jsonb,
+  signing_key    text,
   PRIMARY KEY (tenant_id, application_id)
 );
 CREATE TABLE IF NOT EXISTS branches (
@@ -136,11 +137,32 @@ export class PostgresCatalogRepository implements CatalogRepository, OnModuleDes
     return result.rows[0]?.id;
   }
 
-  async createApplication(application: Application): Promise<void> {
+  async createApplication(application: Application, signingPrivateKeyPem: string): Promise<void> {
     await this.#pool.query(
-      "INSERT INTO applications (tenant_id, application_id, data, policy) VALUES ($1, $2, $3, NULL)",
-      [application.tenantId, application.id, JSON.stringify(application)],
+      `INSERT INTO applications (tenant_id, application_id, data, policy, signing_key)
+       VALUES ($1, $2, $3, NULL, $4)`,
+      [application.tenantId, application.id, JSON.stringify(application), signingPrivateKeyPem],
     );
+  }
+
+  /**
+   * The seeded demo application is inserted with a NULL signing key, so this
+   * returns undefined for it and the caller falls back to the demo key the
+   * existing clients already pin.
+   */
+  async getSigningKey(
+    tenantId: string,
+    applicationId: string,
+  ): Promise<{ keyId: string; privateKeyPem: string } | undefined> {
+    const result = await this.#pool.query<{ data: Application; signing_key: string | null }>(
+      "SELECT data, signing_key FROM applications WHERE tenant_id = $1 AND application_id = $2",
+      [tenantId, applicationId],
+    );
+    const row = result.rows[0];
+    if (row === undefined || row.signing_key === null) {
+      return undefined;
+    }
+    return { keyId: row.data.configurationSigningKeyId, privateKeyPem: row.signing_key };
   }
 
   async getPolicy(tenantId: string, applicationId: string): Promise<GeofencePolicy | undefined> {
