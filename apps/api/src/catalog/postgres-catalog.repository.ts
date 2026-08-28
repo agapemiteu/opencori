@@ -7,6 +7,7 @@ import type {
   UpdateBranchRequest,
 } from "@opencori/contracts";
 import { Injectable } from "@nestjs/common";
+import type { OnModuleDestroy } from "@nestjs/common";
 import { Pool } from "pg";
 
 import { alatDemoApplication, wemaDemoBranches, wemaDemoTenant } from "./seed.js";
@@ -47,7 +48,7 @@ CREATE TABLE IF NOT EXISTS branches (
 `;
 
 @Injectable()
-export class PostgresCatalogRepository implements CatalogRepository {
+export class PostgresCatalogRepository implements CatalogRepository, OnModuleDestroy {
   readonly #pool: Pool;
 
   constructor(connectionString: string) {
@@ -81,7 +82,12 @@ export class PostgresCatalogRepository implements CatalogRepository {
     }
   }
 
-  async close(): Promise<void> {
+  /**
+   * Nest calls this on shutdown. Without it the pool keeps its sockets open and
+   * a redeploy leaves connections behind until Postgres times them out, which
+   * on a small instance is enough to exhaust the connection limit.
+   */
+  async onModuleDestroy(): Promise<void> {
     await this.#pool.end();
   }
 
