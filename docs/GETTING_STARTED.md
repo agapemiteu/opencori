@@ -5,12 +5,12 @@ browser encryption, delivery, and receipts.
 
 ## 1. Fork and run
 
-Fork <https://github.com/agapemiteu/corri>, then run:
+Fork <https://github.com/agapemiteu/opencori>, then run:
 
 ```bash
-git clone https://github.com/<your-github-name>/corri.git
-cd corri
-git remote add upstream https://github.com/agapemiteu/corri.git
+git clone https://github.com/<your-github-name>/opencori.git
+cd opencori
+git remote add upstream https://github.com/agapemiteu/opencori.git
 pnpm install
 pnpm check
 pnpm dev

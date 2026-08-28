@@ -317,7 +317,7 @@ export default function Page() {
     <main className="demoShell">
       <header className="presenterHeader">
         <div>
-          <span className="overline">WEMA HACKAHOLICS · DIGITAL TRANSFORMATION</span>
+          <span className="overline">CORRI · BRANCH PRESENCE</span>
           <h1>ALAT branch experience</h1>
           <p>
             The customer uses ALAT exactly as before. The new capability is embedded underneath.
@@ -713,7 +713,7 @@ export default function Page() {
       <section className={reveal ? "infraReveal open" : "infraReveal"}>
         <div className="infraHeader">
           <div>
-            <span className="overline">JUDGE / ENGINEERING VIEW · NOT CUSTOMER-FACING</span>
+            <span className="overline">ENGINEERING VIEW · NOT CUSTOMER-FACING</span>
             <h2>What was running underneath ALAT</h2>
             <p>
               Corri is embedded infrastructure. This surface exists for integration, operations and

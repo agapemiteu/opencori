@@ -41,4 +41,4 @@ Main methods:
 - Delivery: `deliverEncryptedRequest()`, `getDeliveryReceipt()`
 - Events: `on()`, `off()`, `getDiagnostics()`
 
-See the [quickstart and full reference](https://github.com/agapemiteu/corri#readme).
+See the [quickstart and full reference](https://github.com/agapemiteu/opencori#readme).

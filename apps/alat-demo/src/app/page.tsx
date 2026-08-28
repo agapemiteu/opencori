@@ -177,7 +177,7 @@ export default function DashboardPage() {
         )}
 
         <header className="flex justify-between items-center pb-6 border-b border-slate-200">
-          <h1 className="text-2xl font-bold text-slate-900">Wema Hackaholics - ALAT Demo</h1>
+          <h1 className="text-2xl font-bold text-slate-900">ALAT Demo</h1>
           <div className="flex items-center space-x-2">
             <span className="relative flex h-3 w-3">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-slate-400 opacity-75" />
