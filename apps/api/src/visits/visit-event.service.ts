@@ -10,7 +10,7 @@ import {
 import { ForbiddenException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 
 import { CATALOG_REPOSITORY, type CatalogReader } from "../catalog/catalog.repository.js";
-import { DEMO_CONFIGURATION_VERSION } from "../demo/demo-seed.js";
+import { DEMO_CONFIGURATION_VERSION } from "../catalog/seed.js";
 import { DELIVERY_REPOSITORY, type DeliveryRepository } from "../delivery/delivery.repository.js";
 import { VISIT_EVENT_REPOSITORY, type VisitEventRepository } from "./visit-event.repository.js";
 

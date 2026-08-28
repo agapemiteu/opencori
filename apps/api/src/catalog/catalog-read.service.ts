@@ -12,15 +12,15 @@ import { signPayload } from "@opencori/config-verifier";
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 
 import { CLOCK, type Clock } from "../platform/clock.js";
-import { CATALOG_REPOSITORY, type CatalogReader } from "../catalog/catalog.repository.js";
+import { CATALOG_REPOSITORY, type CatalogReader } from "./catalog.repository.js";
 import {
   DEMO_CONFIGURATION_KEY_ID,
   DEMO_CONFIGURATION_PRIVATE_KEY,
   DEMO_CONFIGURATION_VERSION,
-} from "./demo-seed.js";
+} from "./seed.js";
 
 @Injectable()
-export class DemoCatalogService {
+export class CatalogReadService {
   constructor(
     @Inject(CATALOG_REPOSITORY)
     private readonly repository: CatalogReader,

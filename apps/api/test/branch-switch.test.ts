@@ -8,7 +8,7 @@ import {
   DEMO_CONFIGURATION_VERSION,
   wemaDemoBranches,
   wemaDemoTenant,
-} from "../src/demo/demo-seed.js";
+} from "../src/catalog/seed.js";
 import { DeliveryService } from "../src/delivery/delivery.service.js";
 import { InMemoryDeliveryRepository } from "../src/delivery/delivery.repository.js";
 import { InMemoryVisitEventRepository } from "../src/visits/visit-event.repository.js";

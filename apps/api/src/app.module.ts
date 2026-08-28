@@ -14,8 +14,8 @@ import { DELIVERY_DESTINATION, WemaWebhookDestination } from "./delivery/deliver
 import { DELIVERY_REPOSITORY, InMemoryDeliveryRepository } from "./delivery/delivery.repository.js";
 import { DeliveryService } from "./delivery/delivery.service.js";
 import { DeliveryController } from "./delivery/delivery.controller.js";
-import { DemoCatalogService } from "./demo/demo-catalog.service.js";
-import { DemoController } from "./demo/demo.controller.js";
+import { CatalogReadService } from "./catalog/catalog-read.service.js";
+import { CatalogReadController } from "./catalog/catalog-read.controller.js";
 import { HealthController } from "./health/health.controller.js";
 import { HealthService } from "./health/health.service.js";
 import { CLOCK, SystemClock } from "./platform/clock.js";
@@ -32,7 +32,7 @@ import { VisitEventsController } from "./visits/visit-events.controller.js";
 @Module({
   controllers: [
     CatalogController,
-    DemoController,
+    CatalogReadController,
     DeliveryController,
     HealthController,
     SdkBranchesController,
@@ -42,7 +42,7 @@ import { VisitEventsController } from "./visits/visit-events.controller.js";
   providers: [
     ApiKeyGuard,
     CatalogService,
-    DemoCatalogService,
+    CatalogReadService,
     DeliveryService,
     EnvironmentService,
     HealthService,

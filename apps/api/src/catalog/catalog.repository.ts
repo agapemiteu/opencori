@@ -10,7 +10,7 @@ import type {
 } from "@opencori/contracts";
 import { Injectable } from "@nestjs/common";
 
-import { alatDemoApplication, wemaDemoBranches, wemaDemoTenant } from "../demo/demo-seed.js";
+import { alatDemoApplication, wemaDemoBranches, wemaDemoTenant } from "./seed.js";
 
 export const CATALOG_REPOSITORY = Symbol("OPENCORI_CATALOG_REPOSITORY");
 

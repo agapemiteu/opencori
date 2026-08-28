@@ -2,7 +2,7 @@ import type { SignedConfiguration } from "@opencori/contracts";
 import { BadRequestException, Controller, Get, Inject, Query } from "@nestjs/common";
 import { z } from "zod";
 
-import { DemoCatalogService } from "../demo/demo-catalog.service.js";
+import { CatalogReadService } from "../catalog/catalog-read.service.js";
 
 const configurationQuerySchema = z
   .object({
@@ -13,7 +13,7 @@ const configurationQuerySchema = z
 
 @Controller("sdk/configuration")
 export class SdkConfigurationController {
-  constructor(@Inject(DemoCatalogService) private readonly catalog: DemoCatalogService) {}
+  constructor(@Inject(CatalogReadService) private readonly catalog: CatalogReadService) {}
 
   @Get()
   getConfiguration(@Query() query: Record<string, unknown>): Promise<SignedConfiguration> {

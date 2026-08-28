@@ -13,7 +13,7 @@ import {
   DEMO_CONFIGURATION_KEY_ID,
   DEMO_CONFIGURATION_PRIVATE_KEY,
   DEMO_CONFIGURATION_VERSION,
-} from "../demo/demo-seed.js";
+} from "../catalog/seed.js";
 import { CLOCK, type Clock } from "../platform/clock.js";
 
 const earthRadiusMeters = 6_371_000;

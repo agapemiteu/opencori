@@ -9,7 +9,7 @@ import type {
 import { Injectable } from "@nestjs/common";
 import { Pool } from "pg";
 
-import { alatDemoApplication, wemaDemoBranches, wemaDemoTenant } from "../demo/demo-seed.js";
+import { alatDemoApplication, wemaDemoBranches, wemaDemoTenant } from "./seed.js";
 import { hashApiKey, type CatalogRepository, type UpsertOutcome } from "./catalog.repository.js";
 
 /**

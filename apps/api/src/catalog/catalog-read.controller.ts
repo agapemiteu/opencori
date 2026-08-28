@@ -6,7 +6,7 @@ import type {
 import { z } from "zod";
 import { BadRequestException, Body, Controller, Get, Inject, Post } from "@nestjs/common";
 
-import { DemoCatalogService } from "./demo-catalog.service.js";
+import { CatalogReadService } from "./catalog-read.service.js";
 
 const publishRequestSchema = z
   .object({
@@ -16,8 +16,8 @@ const publishRequestSchema = z
   .strict();
 
 @Controller()
-export class DemoController {
-  constructor(@Inject(DemoCatalogService) private readonly catalog: DemoCatalogService) {}
+export class CatalogReadController {
+  constructor(@Inject(CatalogReadService) private readonly catalog: CatalogReadService) {}
 
   @Get("catalog")
   async getCatalog(): Promise<DemoCatalogResponse> {
