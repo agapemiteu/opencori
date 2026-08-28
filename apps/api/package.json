@@ -22,7 +22,8 @@
     "fastify": "catalog:",
     "reflect-metadata": "catalog:",
     "rxjs": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "pg": "catalog:"
   },
   "devDependencies": {
     "@opencori/crypto-envelope": "workspace:*",
@@ -31,6 +32,7 @@
     "rimraf": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "@types/pg": "catalog:"
   }
 }

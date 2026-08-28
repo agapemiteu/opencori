@@ -13,7 +13,7 @@ export class VisitEventsController {
   constructor(@Inject(VisitEventService) private readonly visits: VisitEventService) {}
 
   @Post("sdk/visits/events")
-  record(@Body() body: unknown): VisitEventIngestionReceipt {
+  async record(@Body() body: unknown): Promise<VisitEventIngestionReceipt> {
     const parsed = visitEventSchema.safeParse(body);
     if (!parsed.success) {
       throw new BadRequestException();

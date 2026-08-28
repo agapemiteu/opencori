@@ -39,7 +39,7 @@ export class ApiKeyGuard implements CanActivate {
     private readonly repository: CatalogRepository,
   ) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
 
     const apiKey = readApiKey(request.headers);
@@ -47,7 +47,7 @@ export class ApiKeyGuard implements CanActivate {
       throw new UnauthorizedException();
     }
 
-    const tenantId = this.repository.findTenantIdByApiKey(apiKey);
+    const tenantId = await this.repository.findTenantIdByApiKey(apiKey);
     if (tenantId === undefined) {
       throw new UnauthorizedException();
     }

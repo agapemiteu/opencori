@@ -56,8 +56,8 @@ export class CatalogService {
     @Inject(CLOCK) private readonly clock: Clock,
   ) {}
 
-  createTenant(request: CreateTenantRequest): CreateTenantResponse {
-    if (this.repository.getTenant(request.id) !== undefined) {
+  async createTenant(request: CreateTenantRequest): Promise<CreateTenantResponse> {
+    if ((await this.repository.getTenant(request.id)) !== undefined) {
       throw new ConflictException();
     }
 
@@ -72,7 +72,7 @@ export class CatalogService {
 
     // Returned now and never again: only the hash is kept.
     const apiKey = generateApiKey();
-    this.repository.createTenant(tenant, hashApiKey(apiKey));
+    await this.repository.createTenant(tenant, hashApiKey(apiKey));
 
     return createTenantResponseSchema.parse({
       tenantId: tenant.id,
@@ -82,11 +82,14 @@ export class CatalogService {
     });
   }
 
-  createApplication(tenantId: string, request: CreateApplicationRequest): Application {
-    if (this.repository.getTenant(tenantId) === undefined) {
+  async createApplication(
+    tenantId: string,
+    request: CreateApplicationRequest,
+  ): Promise<Application> {
+    if ((await this.repository.getTenant(tenantId)) === undefined) {
       throw new NotFoundException();
     }
-    if (this.repository.getApplication(tenantId, request.id) !== undefined) {
+    if ((await this.repository.getApplication(tenantId, request.id)) !== undefined) {
       throw new ConflictException();
     }
 
@@ -106,54 +109,69 @@ export class CatalogService {
       updatedAt: timestamp,
     });
 
-    this.repository.createApplication(application);
-    this.repository.setPolicy(tenantId, application.id, request.policy ?? DEFAULT_POLICY);
+    await this.repository.createApplication(application);
+    await this.repository.setPolicy(tenantId, application.id, request.policy ?? DEFAULT_POLICY);
     return application;
   }
 
-  getPolicy(tenantId: string, applicationId: string): GeofencePolicy {
-    if (this.repository.getApplication(tenantId, applicationId) === undefined) {
+  async getPolicy(tenantId: string, applicationId: string): Promise<GeofencePolicy> {
+    if ((await this.repository.getApplication(tenantId, applicationId)) === undefined) {
       throw new NotFoundException();
     }
-    return this.repository.getPolicy(tenantId, applicationId) ?? DEFAULT_POLICY;
+    return (await this.repository.getPolicy(tenantId, applicationId)) ?? DEFAULT_POLICY;
   }
 
-  setPolicy(tenantId: string, applicationId: string, policy: GeofencePolicy): GeofencePolicy {
-    if (this.repository.getApplication(tenantId, applicationId) === undefined) {
+  async setPolicy(
+    tenantId: string,
+    applicationId: string,
+    policy: GeofencePolicy,
+  ): Promise<GeofencePolicy> {
+    if ((await this.repository.getApplication(tenantId, applicationId)) === undefined) {
       throw new NotFoundException();
     }
-    this.repository.setPolicy(tenantId, applicationId, policy);
+    await this.repository.setPolicy(tenantId, applicationId, policy);
     return policy;
   }
 
-  upsertBranches(tenantId: string, request: UpsertBranchesRequest): UpsertBranchesResponse {
-    if (this.repository.getTenant(tenantId) === undefined) {
+  async upsertBranches(
+    tenantId: string,
+    request: UpsertBranchesRequest,
+  ): Promise<UpsertBranchesResponse> {
+    if ((await this.repository.getTenant(tenantId)) === undefined) {
       throw new NotFoundException();
     }
 
-    const outcome = this.repository.upsertBranches(tenantId, request.branches, this.clock.now());
+    const outcome = await this.repository.upsertBranches(
+      tenantId,
+      request.branches,
+      this.clock.now(),
+    );
 
     return upsertBranchesResponseSchema.parse({
       tenantId,
       created: outcome.created,
       updated: outcome.updated,
-      total: this.repository.listBranches(tenantId).length,
+      total: (await this.repository.listBranches(tenantId)).length,
     });
   }
 
-  listBranches(tenantId: string): readonly Branch[] {
-    if (this.repository.getTenant(tenantId) === undefined) {
+  async listBranches(tenantId: string): Promise<readonly Branch[]> {
+    if ((await this.repository.getTenant(tenantId)) === undefined) {
       throw new NotFoundException();
     }
-    return this.repository.listBranches(tenantId);
+    return await this.repository.listBranches(tenantId);
   }
 
-  updateBranch(tenantId: string, branchId: string, update: UpdateBranchRequest): Branch {
-    if (this.repository.getTenant(tenantId) === undefined) {
+  async updateBranch(
+    tenantId: string,
+    branchId: string,
+    update: UpdateBranchRequest,
+  ): Promise<Branch> {
+    if ((await this.repository.getTenant(tenantId)) === undefined) {
       throw new NotFoundException();
     }
 
-    const existing = this.repository.getBranch(tenantId, branchId);
+    const existing = await this.repository.getBranch(tenantId, branchId);
     if (existing === undefined) {
       throw new NotFoundException();
     }
@@ -171,7 +189,12 @@ export class CatalogService {
       throw new BadRequestException();
     }
 
-    const updated = this.repository.updateBranch(tenantId, branchId, update, this.clock.now());
+    const updated = await this.repository.updateBranch(
+      tenantId,
+      branchId,
+      update,
+      this.clock.now(),
+    );
     if (updated === undefined) {
       throw new NotFoundException();
     }

@@ -41,7 +41,7 @@ export class CatalogController {
   constructor(@Inject(CatalogService) private readonly catalog: CatalogService) {}
 
   @Post()
-  createTenant(@Body() body: unknown): CreateTenantResponse {
+  async createTenant(@Body() body: unknown): Promise<CreateTenantResponse> {
     const parsed = createTenantRequestSchema.safeParse(body);
     if (!parsed.success) {
       throw new BadRequestException();
@@ -51,7 +51,10 @@ export class CatalogController {
 
   @Post(":tenantId/applications")
   @UseGuards(ApiKeyGuard)
-  createApplication(@Param("tenantId") tenantId: string, @Body() body: unknown): Application {
+  async createApplication(
+    @Param("tenantId") tenantId: string,
+    @Body() body: unknown,
+  ): Promise<Application> {
     const parsed = createApplicationRequestSchema.safeParse(body);
     if (!parsed.success) {
       throw new BadRequestException();
@@ -61,21 +64,21 @@ export class CatalogController {
 
   @Get(":tenantId/applications/:applicationId/policy")
   @UseGuards(ApiKeyGuard)
-  getPolicy(
+  async getPolicy(
     @Param("tenantId") tenantId: string,
     @Param("applicationId") applicationId: string,
-  ): GeofencePolicy {
+  ): Promise<GeofencePolicy> {
     return this.catalog.getPolicy(tenantId, applicationId);
   }
 
   /** Where the visit timer and the cooldowns are set. */
   @Put(":tenantId/applications/:applicationId/policy")
   @UseGuards(ApiKeyGuard)
-  setPolicy(
+  async setPolicy(
     @Param("tenantId") tenantId: string,
     @Param("applicationId") applicationId: string,
     @Body() body: unknown,
-  ): GeofencePolicy {
+  ): Promise<GeofencePolicy> {
     const parsed = updateApplicationPolicyRequestSchema.safeParse(body);
     if (!parsed.success) {
       throw new BadRequestException();
@@ -90,10 +93,10 @@ export class CatalogController {
   @Put(":tenantId/branches")
   @HttpCode(200)
   @UseGuards(ApiKeyGuard)
-  upsertBranches(
+  async upsertBranches(
     @Param("tenantId") tenantId: string,
     @Body() body: unknown,
-  ): UpsertBranchesResponse {
+  ): Promise<UpsertBranchesResponse> {
     const parsed = upsertBranchesRequestSchema.safeParse(body);
     if (!parsed.success) {
       throw new BadRequestException();
@@ -103,17 +106,19 @@ export class CatalogController {
 
   @Get(":tenantId/branches")
   @UseGuards(ApiKeyGuard)
-  listBranches(@Param("tenantId") tenantId: string): { branches: readonly Branch[] } {
-    return { branches: this.catalog.listBranches(tenantId) };
+  async listBranches(
+    @Param("tenantId") tenantId: string,
+  ): Promise<{ branches: readonly Branch[] }> {
+    return { branches: await this.catalog.listBranches(tenantId) };
   }
 
   @Patch(":tenantId/branches/:branchId")
   @UseGuards(ApiKeyGuard)
-  updateBranch(
+  async updateBranch(
     @Param("tenantId") tenantId: string,
     @Param("branchId") branchId: string,
     @Body() body: unknown,
-  ): Branch {
+  ): Promise<Branch> {
     const parsed = updateBranchRequestSchema.safeParse(body);
     if (!parsed.success) {
       throw new BadRequestException();

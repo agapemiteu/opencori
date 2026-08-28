@@ -2,7 +2,7 @@ import type { Branch, DeliveryEnvelope, VisitEvent } from "@opencori/contracts";
 import { ForbiddenException } from "@nestjs/common";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import type { DemoCatalogRepository } from "../src/demo/demo-catalog.repository.js";
+import type { CatalogReader } from "../src/catalog/catalog.repository.js";
 import {
   alatDemoApplication,
   DEMO_CONFIGURATION_VERSION,
@@ -17,20 +17,20 @@ import { VisitEventService } from "../src/visits/visit-event.service.js";
 const BRANCH_ID = "wema_marina";
 
 /** Catalog whose branches can be switched off part way through a test. */
-class SwitchableCatalog implements DemoCatalogRepository {
+class SwitchableCatalog implements CatalogReader {
   readonly branches: Branch[] = wemaDemoBranches.map((branch) => ({ ...branch }));
 
-  getTenant(tenantId: string) {
+  async getTenant(tenantId: string) {
     return tenantId === wemaDemoTenant.id ? wemaDemoTenant : undefined;
   }
 
-  getApplication(tenantId: string, applicationId: string) {
+  async getApplication(tenantId: string, applicationId: string) {
     return tenantId === alatDemoApplication.tenantId && applicationId === alatDemoApplication.id
       ? alatDemoApplication
       : undefined;
   }
 
-  listBranches(tenantId: string): readonly Branch[] {
+  async listBranches(tenantId: string): Promise<readonly Branch[]> {
     return tenantId === wemaDemoTenant.id ? this.branches : [];
   }
 
@@ -97,25 +97,27 @@ describe("a branch the tenant has switched off", () => {
     );
   });
 
-  it("refuses to start a new visit", () => {
+  it("refuses to start a new visit", async () => {
     catalog.switchOff(BRANCH_ID);
-    expect(() => visitEvents.record(visitEvent("VISIT_STARTED"))).toThrow(ForbiddenException);
+    await expect(visitEvents.record(visitEvent("VISIT_STARTED"))).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
   });
 
-  it("still lets a visit that was already open be closed", () => {
-    expect(visitEvents.record(visitEvent("VISIT_STARTED")).status).toBe("RECORDED");
+  it("still lets a visit that was already open be closed", async () => {
+    expect((await visitEvents.record(visitEvent("VISIT_STARTED"))).status).toBe("RECORDED");
     catalog.switchOff(BRANCH_ID);
-    expect(visitEvents.record(visitEvent("VISIT_COMPLETED")).status).toBe("RECORDED");
+    expect((await visitEvents.record(visitEvent("VISIT_COMPLETED"))).status).toBe("RECORDED");
   });
 
   it("stops delivery for a visit that is already in progress", async () => {
-    expect(visitEvents.record(visitEvent("VISIT_STARTED")).status).toBe("RECORDED");
+    expect((await visitEvents.record(visitEvent("VISIT_STARTED"))).status).toBe("RECORDED");
     catalog.switchOff(BRANCH_ID);
     await expect(deliveries.deliver(envelope())).rejects.toBeInstanceOf(ForbiddenException);
   });
 
   it("delivers normally while the branch is on", async () => {
-    expect(visitEvents.record(visitEvent("VISIT_STARTED")).status).toBe("RECORDED");
+    expect((await visitEvents.record(visitEvent("VISIT_STARTED"))).status).toBe("RECORDED");
     // Reaching the receiver proves the branch check passed. The stub throws a
     // plain Error, which is not a ForbiddenException.
     await expect(deliveries.deliver(envelope())).rejects.not.toBeInstanceOf(ForbiddenException);

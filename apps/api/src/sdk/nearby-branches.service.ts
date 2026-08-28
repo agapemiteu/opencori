@@ -8,10 +8,7 @@ import {
 import { signPayload } from "@opencori/config-verifier";
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 
-import {
-  DEMO_CATALOG_REPOSITORY,
-  type DemoCatalogRepository,
-} from "../demo/demo-catalog.repository.js";
+import { CATALOG_REPOSITORY, type CatalogReader } from "../catalog/catalog.repository.js";
 import {
   DEMO_CONFIGURATION_KEY_ID,
   DEMO_CONFIGURATION_PRIVATE_KEY,
@@ -44,20 +41,19 @@ function distanceMeters(
 @Injectable()
 export class NearbyBranchesService {
   constructor(
-    @Inject(DEMO_CATALOG_REPOSITORY)
-    private readonly repository: DemoCatalogRepository,
+    @Inject(CATALOG_REPOSITORY)
+    private readonly repository: CatalogReader,
     @Inject(CLOCK) private readonly clock: Clock,
   ) {}
 
-  findNearby(query: NearbyBranchesQuery): SignedNearbyBranchesResponse {
-    const application = this.repository.getApplication(query.tenantId, query.applicationId);
+  async findNearby(query: NearbyBranchesQuery): Promise<SignedNearbyBranchesResponse> {
+    const application = await this.repository.getApplication(query.tenantId, query.applicationId);
     if (application === undefined) {
       throw new NotFoundException();
     }
 
     const maximumDistanceMeters = query.radiusKm * 1_000;
-    const branches: NearbyBranch[] = this.repository
-      .listBranches(query.tenantId)
+    const branches: NearbyBranch[] = (await this.repository.listBranches(query.tenantId))
       .flatMap((branch) => {
         if (!branch.active || branch.latitude === null || branch.longitude === null) {
           return [];

@@ -35,6 +35,13 @@ services:
         value: 0.0.0.0
       - key: CORRI_SERVICE_VERSION
         value: "1.0.0"
+      # Without this the catalog is held in memory and every redeploy forgets
+      # which organisations were onboarded. Render fills it in from the database
+      # declared at the bottom of this file.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: opencori-catalog
+          property: connectionString
       # Set here rather than prompted, so a blueprint deploy needs no manual
       # follow-up. Render derives service hostnames from the names above, so
       # the receiver URL is known in advance.
@@ -64,3 +71,14 @@ services:
         value: "2"
       - key: WEMA_DEMO_WEBHOOK_RETRY_DELAY_MS
         value: "3000"
+
+# Holds the catalog: tenants, applications, and their locations. This is the
+# organisation's own configuration, not customer data — no readable customer
+# request is stored here or anywhere else.
+#
+# Render's free Postgres expires after a set period. Move it to a paid plan
+# before onboarding anyone whose catalog you cannot afford to lose.
+databases:
+  - name: opencori-catalog
+    plan: free
+    region: frankfurt

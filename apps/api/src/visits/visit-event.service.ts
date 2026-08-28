@@ -9,10 +9,7 @@ import {
 } from "@opencori/contracts";
 import { ForbiddenException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 
-import {
-  DEMO_CATALOG_REPOSITORY,
-  type DemoCatalogRepository,
-} from "../demo/demo-catalog.repository.js";
+import { CATALOG_REPOSITORY, type CatalogReader } from "../catalog/catalog.repository.js";
 import { DEMO_CONFIGURATION_VERSION } from "../demo/demo-seed.js";
 import { DELIVERY_REPOSITORY, type DeliveryRepository } from "../delivery/delivery.repository.js";
 import { VISIT_EVENT_REPOSITORY, type VisitEventRepository } from "./visit-event.repository.js";
@@ -42,16 +39,16 @@ function median(sorted: readonly number[]): number | null {
 export class VisitEventService {
   constructor(
     @Inject(VISIT_EVENT_REPOSITORY) private readonly events: VisitEventRepository,
-    @Inject(DEMO_CATALOG_REPOSITORY)
-    private readonly catalog: DemoCatalogRepository,
+    @Inject(CATALOG_REPOSITORY)
+    private readonly catalog: CatalogReader,
     @Inject(DELIVERY_REPOSITORY) private readonly deliveries: DeliveryRepository,
   ) {}
 
-  record(event: VisitEvent): VisitEventIngestionReceipt {
-    const application = this.catalog.getApplication(event.tenantId, event.applicationId);
-    const branch = this.catalog
-      .listBranches(event.tenantId)
-      .find((candidate) => candidate.id === event.branchId);
+  async record(event: VisitEvent): Promise<VisitEventIngestionReceipt> {
+    const application = await this.catalog.getApplication(event.tenantId, event.applicationId);
+    const branch = (await this.catalog.listBranches(event.tenantId)).find(
+      (candidate) => candidate.id === event.branchId,
+    );
     if (
       application === undefined ||
       branch === undefined ||

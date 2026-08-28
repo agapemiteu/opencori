@@ -16,10 +16,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 
-import {
-  DEMO_CATALOG_REPOSITORY,
-  type DemoCatalogRepository,
-} from "../demo/demo-catalog.repository.js";
+import { CATALOG_REPOSITORY, type CatalogReader } from "../catalog/catalog.repository.js";
 import { CLOCK, type Clock } from "../platform/clock.js";
 import {
   VISIT_EVENT_REPOSITORY,
@@ -46,7 +43,7 @@ export class DeliveryService {
     @Inject(DELIVERY_REPOSITORY) private readonly deliveries: DeliveryRepository,
     @Inject(DELIVERY_DESTINATION) private readonly destination: DeliveryDestination,
     @Inject(VISIT_EVENT_REPOSITORY) private readonly visits: VisitEventRepository,
-    @Inject(DEMO_CATALOG_REPOSITORY) private readonly catalog: DemoCatalogRepository,
+    @Inject(CATALOG_REPOSITORY) private readonly catalog: CatalogReader,
     @Inject(CLOCK) private readonly clock: Clock,
   ) {}
 
@@ -55,12 +52,13 @@ export class DeliveryService {
     if (Date.parse(envelope.expiresAt) <= now.getTime()) {
       throw new GoneException();
     }
-    const branch = this.catalog
-      .listBranches(envelope.tenantId)
-      .find((candidate) => candidate.id === envelope.branchId);
+    const branch = (await this.catalog.listBranches(envelope.tenantId)).find(
+      (candidate) => candidate.id === envelope.branchId,
+    );
     if (
       envelope.routeKey !== "customer-care.general" ||
-      this.catalog.getApplication(envelope.tenantId, envelope.applicationId) === undefined ||
+      (await this.catalog.getApplication(envelope.tenantId, envelope.applicationId)) ===
+        undefined ||
       branch === undefined ||
       !this.visits.hasActiveVisit(envelope)
     ) {

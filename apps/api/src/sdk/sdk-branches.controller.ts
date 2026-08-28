@@ -8,7 +8,7 @@ export class SdkBranchesController {
   constructor(@Inject(NearbyBranchesService) private readonly nearby: NearbyBranchesService) {}
 
   @Get("nearby")
-  findNearby(@Query() query: Record<string, unknown>): SignedNearbyBranchesResponse {
+  async findNearby(@Query() query: Record<string, unknown>): Promise<SignedNearbyBranchesResponse> {
     const parsed = nearbyBranchesQuerySchema.safeParse(query);
     if (!parsed.success) {
       throw new BadRequestException();

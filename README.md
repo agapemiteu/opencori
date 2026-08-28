@@ -181,15 +181,28 @@ curl -sX PATCH http://localhost:3000/v1/tenants/your-bank/branches/marina \
 The visit timer and cooldowns live on the application policy, at
 `PUT /v1/tenants/:tenantId/applications/:applicationId/policy`.
 
-## Not built yet
+## Storage
 
-The catalog is held in memory and **does not survive a restart**.
-`CatalogRepository` in `apps/api/src/catalog/` is the seam a durable
-implementation slots into; nothing above it changes when it does.
+Two implementations of one interface, chosen by whether `DATABASE_URL` is set.
 
-Adding a database does not weaken the privacy claim. Locations and tenants are
-the organisation's own configuration, not customer data. Nothing readable about
-a customer request is stored either way.
+| `DATABASE_URL` | Catalog lives in | Survives a restart |
+| -------------- | ---------------- | ------------------ |
+| unset          | Memory           | No                 |
+| set            | Postgres         | Yes                |
+
+Unset is the default so `pnpm dev` and the tests need no database. Set it and
+the same code becomes durable — nothing else changes. `render.yaml` declares a
+Postgres instance and wires the variable, so a blueprint deploy is durable out
+of the box.
+
+To add another store, implement `CatalogRepository` in
+`apps/api/src/catalog/catalog.repository.ts` and return it from the factory in
+`app.module.ts`. Read-only callers depend on the narrower `CatalogReader`.
+
+Storing this does not weaken the privacy claim. Locations and tenants are the
+organisation's own configuration, not customer data. Nothing readable about a
+customer request is stored either way — `/v1/privacy` still answers
+`readableRequestContentStored: false`.
 
 ## Built with
 

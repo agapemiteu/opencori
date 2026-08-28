@@ -20,17 +20,17 @@ export class DemoController {
   constructor(@Inject(DemoCatalogService) private readonly catalog: DemoCatalogService) {}
 
   @Get("catalog")
-  getCatalog(): DemoCatalogResponse {
+  async getCatalog(): Promise<DemoCatalogResponse> {
     return this.catalog.getCatalog();
   }
 
   @Get("branches")
-  getBranches(): DemoBranchesResponse {
+  async getBranches(): Promise<DemoBranchesResponse> {
     return this.catalog.getBranches();
   }
 
   @Post("configurations/publish")
-  publishConfiguration(@Body() body: unknown): SignedConfiguration {
+  async publishConfiguration(@Body() body: unknown): Promise<SignedConfiguration> {
     const parsed = publishRequestSchema.safeParse(body);
     if (!parsed.success) {
       throw new BadRequestException();

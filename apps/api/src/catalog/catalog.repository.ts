@@ -20,31 +20,43 @@ export interface UpsertOutcome {
 }
 
 /**
+ * What the read path needs. Delivery, visit events, and nearby lookups only
+ * ever ask questions, so they depend on this rather than the full repository —
+ * a narrower contract to implement when swapping the store, and a much smaller
+ * thing to fake in a test.
+ */
+export interface CatalogReader {
+  getTenant(tenantId: string): Promise<Tenant | undefined>;
+  getApplication(tenantId: string, applicationId: string): Promise<Application | undefined>;
+  listBranches(tenantId: string): Promise<readonly Branch[]>;
+}
+
+/**
  * The catalog is the organisation's own configuration: who they are, which
  * application talks to us, and which locations to watch. None of it is customer
  * data, which is why it can be stored at all.
  */
-export interface CatalogRepository {
-  getTenant(tenantId: string): Tenant | undefined;
-  getApplication(tenantId: string, applicationId: string): Application | undefined;
-  listBranches(tenantId: string): readonly Branch[];
-
-  createTenant(tenant: Tenant, apiKeyHash: string): void;
+export interface CatalogRepository extends CatalogReader {
+  createTenant(tenant: Tenant, apiKeyHash: string): Promise<void>;
   /** The tenant this key authenticates, or undefined if it authenticates none. */
-  findTenantIdByApiKey(apiKey: string): string | undefined;
+  findTenantIdByApiKey(apiKey: string): Promise<string | undefined>;
 
-  createApplication(application: Application): void;
-  getPolicy(tenantId: string, applicationId: string): GeofencePolicy | undefined;
-  setPolicy(tenantId: string, applicationId: string, policy: GeofencePolicy): void;
+  createApplication(application: Application): Promise<void>;
+  getPolicy(tenantId: string, applicationId: string): Promise<GeofencePolicy | undefined>;
+  setPolicy(tenantId: string, applicationId: string, policy: GeofencePolicy): Promise<void>;
 
-  upsertBranches(tenantId: string, branches: readonly BranchInput[], now: Date): UpsertOutcome;
-  getBranch(tenantId: string, branchId: string): Branch | undefined;
+  upsertBranches(
+    tenantId: string,
+    branches: readonly BranchInput[],
+    now: Date,
+  ): Promise<UpsertOutcome>;
+  getBranch(tenantId: string, branchId: string): Promise<Branch | undefined>;
   updateBranch(
     tenantId: string,
     branchId: string,
     update: UpdateBranchRequest,
     now: Date,
-  ): Branch | undefined;
+  ): Promise<Branch | undefined>;
 }
 
 export function generateApiKey(): string {
@@ -95,26 +107,26 @@ export class InMemoryCatalogRepository implements CatalogRepository {
     );
   }
 
-  getTenant(tenantId: string): Tenant | undefined {
+  async getTenant(tenantId: string): Promise<Tenant | undefined> {
     return this.#tenants.get(tenantId);
   }
 
-  getApplication(tenantId: string, applicationId: string): Application | undefined {
+  async getApplication(tenantId: string, applicationId: string): Promise<Application | undefined> {
     return this.#applications.get(applicationKey(tenantId, applicationId));
   }
 
-  listBranches(tenantId: string): readonly Branch[] {
+  async listBranches(tenantId: string): Promise<readonly Branch[]> {
     const branches = this.#branches.get(tenantId);
     return branches === undefined ? [] : [...branches.values()];
   }
 
-  createTenant(tenant: Tenant, apiKeyHash: string): void {
+  async createTenant(tenant: Tenant, apiKeyHash: string): Promise<void> {
     this.#tenants.set(tenant.id, tenant);
     this.#apiKeyHashes.set(tenant.id, apiKeyHash);
     this.#branches.set(tenant.id, new Map());
   }
 
-  findTenantIdByApiKey(apiKey: string): string | undefined {
+  async findTenantIdByApiKey(apiKey: string): Promise<string | undefined> {
     const candidate = hashApiKey(apiKey);
     for (const [tenantId, storedHash] of this.#apiKeyHashes) {
       if (hashesMatch(candidate, storedHash)) {
@@ -124,19 +136,23 @@ export class InMemoryCatalogRepository implements CatalogRepository {
     return undefined;
   }
 
-  createApplication(application: Application): void {
+  async createApplication(application: Application): Promise<void> {
     this.#applications.set(applicationKey(application.tenantId, application.id), application);
   }
 
-  getPolicy(tenantId: string, applicationId: string): GeofencePolicy | undefined {
+  async getPolicy(tenantId: string, applicationId: string): Promise<GeofencePolicy | undefined> {
     return this.#policies.get(applicationKey(tenantId, applicationId));
   }
 
-  setPolicy(tenantId: string, applicationId: string, policy: GeofencePolicy): void {
+  async setPolicy(tenantId: string, applicationId: string, policy: GeofencePolicy): Promise<void> {
     this.#policies.set(applicationKey(tenantId, applicationId), policy);
   }
 
-  upsertBranches(tenantId: string, branches: readonly BranchInput[], now: Date): UpsertOutcome {
+  async upsertBranches(
+    tenantId: string,
+    branches: readonly BranchInput[],
+    now: Date,
+  ): Promise<UpsertOutcome> {
     let stored = this.#branches.get(tenantId);
     if (stored === undefined) {
       stored = new Map();
@@ -167,16 +183,16 @@ export class InMemoryCatalogRepository implements CatalogRepository {
     return { created, updated };
   }
 
-  getBranch(tenantId: string, branchId: string): Branch | undefined {
+  async getBranch(tenantId: string, branchId: string): Promise<Branch | undefined> {
     return this.#branches.get(tenantId)?.get(branchId);
   }
 
-  updateBranch(
+  async updateBranch(
     tenantId: string,
     branchId: string,
     update: UpdateBranchRequest,
     now: Date,
-  ): Branch | undefined {
+  ): Promise<Branch | undefined> {
     const stored = this.#branches.get(tenantId);
     const existing = stored?.get(branchId);
     if (stored === undefined || existing === undefined) {

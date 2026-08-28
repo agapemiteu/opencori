@@ -16,7 +16,7 @@ export class SdkConfigurationController {
   constructor(@Inject(DemoCatalogService) private readonly catalog: DemoCatalogService) {}
 
   @Get()
-  getConfiguration(@Query() query: Record<string, unknown>): SignedConfiguration {
+  getConfiguration(@Query() query: Record<string, unknown>): Promise<SignedConfiguration> {
     const parsed = configurationQuerySchema.safeParse(query);
     if (!parsed.success) {
       throw new BadRequestException();

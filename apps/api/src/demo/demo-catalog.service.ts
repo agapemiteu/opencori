@@ -12,7 +12,7 @@ import { signPayload } from "@opencori/config-verifier";
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 
 import { CLOCK, type Clock } from "../platform/clock.js";
-import { DEMO_CATALOG_REPOSITORY, type DemoCatalogRepository } from "./demo-catalog.repository.js";
+import { CATALOG_REPOSITORY, type CatalogReader } from "../catalog/catalog.repository.js";
 import {
   DEMO_CONFIGURATION_KEY_ID,
   DEMO_CONFIGURATION_PRIVATE_KEY,
@@ -22,14 +22,14 @@ import {
 @Injectable()
 export class DemoCatalogService {
   constructor(
-    @Inject(DEMO_CATALOG_REPOSITORY)
-    private readonly repository: DemoCatalogRepository,
+    @Inject(CATALOG_REPOSITORY)
+    private readonly repository: CatalogReader,
     @Inject(CLOCK) private readonly clock: Clock,
   ) {}
 
-  getCatalog(): DemoCatalogResponse {
-    const tenant = this.repository.getTenant("wema");
-    const application = this.repository.getApplication("wema", "alat-demo");
+  async getCatalog(): Promise<DemoCatalogResponse> {
+    const tenant = await this.repository.getTenant("wema");
+    const application = await this.repository.getApplication("wema", "alat-demo");
     if (tenant === undefined || application === undefined) {
       throw new NotFoundException();
     }
@@ -37,25 +37,28 @@ export class DemoCatalogService {
     return demoCatalogResponseSchema.parse({
       tenant,
       application,
-      branchCount: this.repository.listBranches(tenant.id).length,
+      branchCount: (await this.repository.listBranches(tenant.id)).length,
       sourceSummary:
         "Demo records use Wema-owned public pages for branch names, states, sort codes, and the Marina address. Only Marina has a demo-only estimated coordinate and no record is production-eligible.",
     });
   }
 
-  getBranches(): DemoBranchesResponse {
-    if (this.repository.getTenant("wema") === undefined) {
+  async getBranches(): Promise<DemoBranchesResponse> {
+    if ((await this.repository.getTenant("wema")) === undefined) {
       throw new NotFoundException();
     }
     return demoBranchesResponseSchema.parse({
       tenantId: "wema",
       demo: true,
-      branches: this.repository.listBranches("wema"),
+      branches: await this.repository.listBranches("wema"),
     });
   }
 
-  publishConfiguration(tenantId: string, applicationId: string): SignedConfiguration {
-    const application = this.repository.getApplication(tenantId, applicationId);
+  async publishConfiguration(
+    tenantId: string,
+    applicationId: string,
+  ): Promise<SignedConfiguration> {
+    const application = await this.repository.getApplication(tenantId, applicationId);
     if (application === undefined) {
       throw new NotFoundException();
     }

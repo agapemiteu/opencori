@@ -24,6 +24,9 @@ const environmentSchema = z.object({
   // attempt, which is what local development and the tests expect.
   WEMA_DEMO_WEBHOOK_RETRIES: z.coerce.number().int().min(0).max(10).default(0),
   WEMA_DEMO_WEBHOOK_RETRY_DELAY_MS: z.coerce.number().int().min(100).max(30_000).default(2_000),
+  // Absent means the catalog is held in memory, which is what local
+  // development and the tests want. Set it and the catalog becomes durable.
+  DATABASE_URL: z.string().url().optional(),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 });
 

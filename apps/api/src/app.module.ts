@@ -2,14 +2,18 @@ import { Module } from "@nestjs/common";
 
 import { ApiKeyGuard } from "./catalog/api-key.guard.js";
 import { CatalogController } from "./catalog/catalog.controller.js";
-import { CATALOG_REPOSITORY, InMemoryCatalogRepository } from "./catalog/catalog.repository.js";
+import {
+  CATALOG_REPOSITORY,
+  InMemoryCatalogRepository,
+  type CatalogRepository,
+} from "./catalog/catalog.repository.js";
+import { PostgresCatalogRepository } from "./catalog/postgres-catalog.repository.js";
 import { CatalogService } from "./catalog/catalog.service.js";
 import { EnvironmentService } from "./config/environment.js";
 import { DELIVERY_DESTINATION, WemaWebhookDestination } from "./delivery/delivery-destination.js";
 import { DELIVERY_REPOSITORY, InMemoryDeliveryRepository } from "./delivery/delivery.repository.js";
 import { DeliveryService } from "./delivery/delivery.service.js";
 import { DeliveryController } from "./delivery/delivery.controller.js";
-import { DEMO_CATALOG_REPOSITORY } from "./demo/demo-catalog.repository.js";
 import { DemoCatalogService } from "./demo/demo-catalog.service.js";
 import { DemoController } from "./demo/demo.controller.js";
 import { HealthController } from "./health/health.controller.js";
@@ -44,17 +48,25 @@ import { VisitEventsController } from "./visits/visit-events.controller.js";
     HealthService,
     NearbyBranchesService,
     VisitEventService,
-    InMemoryCatalogRepository,
     {
+      // One instance behind one token, so a location onboarded through the
+      // write API is immediately visible to the read endpoints and to nearby
+      // lookups.
+      //
+      // Without DATABASE_URL the catalog is in memory: no configuration, no
+      // database, which is what `pnpm dev` and the tests want. Set it and the
+      // catalog becomes durable, with no other change anywhere.
       provide: CATALOG_REPOSITORY,
-      useExisting: InMemoryCatalogRepository,
-    },
-    {
-      // The same instance backs both. A location onboarded through the write
-      // API is immediately visible to the read endpoints and to nearby lookups;
-      // two instances would silently serve stale catalogs.
-      provide: DEMO_CATALOG_REPOSITORY,
-      useExisting: InMemoryCatalogRepository,
+      useFactory: async (environment: EnvironmentService): Promise<CatalogRepository> => {
+        const connectionString = environment.values.DATABASE_URL;
+        if (connectionString === undefined) {
+          return new InMemoryCatalogRepository();
+        }
+        const repository = new PostgresCatalogRepository(connectionString);
+        await repository.initialize();
+        return repository;
+      },
+      inject: [EnvironmentService],
     },
     {
       provide: DELIVERY_DESTINATION,
