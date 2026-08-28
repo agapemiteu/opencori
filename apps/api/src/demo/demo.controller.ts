@@ -15,7 +15,7 @@ const publishRequestSchema = z
   })
   .strict();
 
-@Controller("demo")
+@Controller()
 export class DemoController {
   constructor(@Inject(DemoCatalogService) private readonly catalog: DemoCatalogService) {}
 

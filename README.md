@@ -14,13 +14,12 @@ counter. Only the bank holds the key.
 
 | Path                              | What it is                                 |
 | --------------------------------- | ------------------------------------------ |
-| `apps/control-api`                | Presence, delivery, and receipts (NestJS)  |
-| `apps/mock-wema-receiver`         | Stands in for the receiving organisation   |
-| `apps/alat-demo`                  | Reference client app (Next.js)             |
+| `apps/api`                        | Presence, delivery, and receipts (NestJS)  |
+| `apps/mock-receiver`              | Stands in for the receiving organisation   |
+| `apps/demo`                       | Reference client app (Next.js)             |
 | `packages/corri-react-native`     | Client SDK                                 |
 | `packages/crypto-envelope`        | AES-256-GCM message, RSA-OAEP key wrapping |
 | `packages/geofence-state-machine` | Arriving, visiting, leaving                |
-| `website`                         | Project site                               |
 
 ## Run locally
 
@@ -74,7 +73,7 @@ permission.
 You can verify the storage claim against a running instance:
 
 ```bash
-curl "http://localhost:3000/v1/demo/privacy?tenantId=wema&applicationId=alat-demo"
+curl "http://localhost:3000/v1/privacy?tenantId=wema&applicationId=alat-demo"
 ```
 
 It answers `readableRequestContentStored: false` and
@@ -85,7 +84,7 @@ It answers `readableRequestContentStored: false` and
 Corri measures the visit without reading the request.
 
 **Duration.** The clock starts at check-in and stops on leaving.
-`/v1/demo/analytics` reports the median and the slowest tenth, so an operator
+`/v1/analytics` reports the median and the slowest tenth, so an operator
 sees the number without opening anybody's record.
 
 **Satisfaction.** After the visit the client asks for a rating, offering reasons
@@ -123,10 +122,10 @@ Control API:
 | Method | Endpoint                      | What it does                     |
 | ------ | ----------------------------- | -------------------------------- |
 | GET    | `/v1/health`                  | Is the service up                |
-| GET    | `/v1/demo/privacy`            | What was and was not stored      |
-| GET    | `/v1/demo/analytics`          | Delivery speed and visit length  |
-| GET    | `/v1/demo/catalog`            | Locations and public keys        |
-| GET    | `/v1/demo/branches`           | Location list                    |
+| GET    | `/v1/privacy`                 | What was and was not stored      |
+| GET    | `/v1/analytics`               | Delivery speed and visit length  |
+| GET    | `/v1/catalog`                 | Locations and public keys        |
+| GET    | `/v1/branches`                | Location list                    |
 | GET    | `/v1/sdk/configuration`       | Settings the app checks on start |
 | GET    | `/v1/sdk/branches/nearby`     | Locations near a coordinate      |
 | POST   | `/v1/sdk/visits/events`       | Arriving, visiting, leaving      |

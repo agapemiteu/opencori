@@ -11,8 +11,8 @@ import {
   CORRI_DEMO_WEBHOOK_SIGNING_PUBLIC_KEY,
   WEMA_DEMO_ENCRYPTION_KEY_ID,
   WEMA_DEMO_ENCRYPTION_PRIVATE_KEY,
-} from "@corri/mock-wema-receiver/demo-keys";
-import { ReceiverService, type ReceiverSettings } from "@corri/mock-wema-receiver/receiver-service";
+} from "@corri/mock-receiver/demo-keys";
+import { ReceiverService, type ReceiverSettings } from "@corri/mock-receiver/receiver-service";
 import { Test } from "@nestjs/testing";
 import type { NestFastifyApplication } from "@nestjs/platform-fastify";
 import { afterEach, describe, expect, it } from "vitest";
@@ -69,7 +69,7 @@ describe("encrypted delivery gateway", () => {
     await app.init();
     await app.getHttpAdapter().getInstance().ready();
 
-    const catalogResponse = await app.inject({ method: "GET", url: "/v1/demo/catalog" });
+    const catalogResponse = await app.inject({ method: "GET", url: "/v1/catalog" });
     const catalog = demoCatalogResponseSchema.parse(catalogResponse.json());
     const started = {
       eventId: "visit_started_delivery_01",
@@ -146,8 +146,8 @@ describe("encrypted delivery gateway", () => {
       method: "GET",
       url: "/v1/sdk/deliveries/delivery_01?tenantId=wema",
     });
-    const analyticsResponse = await app.inject({ method: "GET", url: "/v1/demo/analytics" });
-    const privacyResponse = await app.inject({ method: "GET", url: "/v1/demo/privacy" });
+    const analyticsResponse = await app.inject({ method: "GET", url: "/v1/analytics" });
+    const privacyResponse = await app.inject({ method: "GET", url: "/v1/privacy" });
 
     expect(deliveryReceiptSchema.parse(response.json())).toMatchObject({
       state: "DELIVERED",

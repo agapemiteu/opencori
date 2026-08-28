@@ -43,9 +43,9 @@ describe("Wema ALAT demo configuration", () => {
 
   it("exposes the demo tenant, ALAT application, and ten provenance-labelled branches", async () => {
     const testApp = await createTestApplication();
-    const catalogResponse = await testApp.inject({ method: "GET", url: "/v1/demo/catalog" });
+    const catalogResponse = await testApp.inject({ method: "GET", url: "/v1/catalog" });
     const catalog = demoCatalogResponseSchema.parse(catalogResponse.json());
-    const branchesResponse = await testApp.inject({ method: "GET", url: "/v1/demo/branches" });
+    const branchesResponse = await testApp.inject({ method: "GET", url: "/v1/branches" });
     const registry = demoBranchesResponseSchema.parse(branchesResponse.json());
 
     expect(catalogResponse.statusCode).toBe(200);
@@ -69,11 +69,11 @@ describe("Wema ALAT demo configuration", () => {
 
   it("publishes an Ed25519-signed configuration verifiable by the seeded application key", async () => {
     const testApp = await createTestApplication();
-    const catalogResponse = await testApp.inject({ method: "GET", url: "/v1/demo/catalog" });
+    const catalogResponse = await testApp.inject({ method: "GET", url: "/v1/catalog" });
     const catalog = demoCatalogResponseSchema.parse(catalogResponse.json());
     const response = await testApp.inject({
       method: "POST",
-      url: "/v1/demo/configurations/publish",
+      url: "/v1/configurations/publish",
       payload: { tenantId: "wema", applicationId: "alat-demo" },
     });
     const signed = signedConfigurationSchema.parse(response.json());
@@ -90,7 +90,7 @@ describe("Wema ALAT demo configuration", () => {
 
   it("serves the published configuration to the SDK with the same verifiable contract", async () => {
     const testApp = await createTestApplication();
-    const catalogResponse = await testApp.inject({ method: "GET", url: "/v1/demo/catalog" });
+    const catalogResponse = await testApp.inject({ method: "GET", url: "/v1/catalog" });
     const catalog = demoCatalogResponseSchema.parse(catalogResponse.json());
     const response = await testApp.inject({
       method: "GET",
@@ -109,7 +109,7 @@ describe("Wema ALAT demo configuration", () => {
 
   it("returns a signed nearby subset and excludes records without coordinates", async () => {
     const testApp = await createTestApplication();
-    const catalogResponse = await testApp.inject({ method: "GET", url: "/v1/demo/catalog" });
+    const catalogResponse = await testApp.inject({ method: "GET", url: "/v1/catalog" });
     const catalog = demoCatalogResponseSchema.parse(catalogResponse.json());
     const response = await testApp.inject({
       method: "GET",
@@ -203,9 +203,9 @@ describe("Wema ALAT demo configuration", () => {
     });
     const analyticsResponse = await testApp.inject({
       method: "GET",
-      url: "/v1/demo/analytics",
+      url: "/v1/analytics",
     });
-    const privacyResponse = await testApp.inject({ method: "GET", url: "/v1/demo/privacy" });
+    const privacyResponse = await testApp.inject({ method: "GET", url: "/v1/privacy" });
 
     expect(visitEventIngestionReceiptSchema.parse(startResponse.json()).status).toBe("RECORDED");
     expect(visitEventIngestionReceiptSchema.parse(duplicateResponse.json()).status).toBe(

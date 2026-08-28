@@ -21,12 +21,12 @@ export class VisitEventsController {
     return this.visits.record(parsed.data);
   }
 
-  @Get("demo/analytics")
+  @Get("analytics")
   analytics(): DemoAnalyticsResponse {
     return this.visits.analytics();
   }
 
-  @Get("demo/privacy")
+  @Get("privacy")
   privacyProof(): PrivacyProofResponse {
     return this.visits.privacyProof();
   }

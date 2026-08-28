@@ -65,7 +65,7 @@ describe("ALAT browser bootstrap", () => {
     });
     const signed = signPayload({ tenantId: "wema", version: 1 }, signingKey);
 
-    expect(requests).toEqual(["http://localhost:3000/v1/demo/catalog"]);
+    expect(requests).toEqual(["http://localhost:3000/v1/catalog"]);
     expect(bootstrap.initialization).toMatchObject({
       tenantId: "wema",
       applicationId: "alat-demo",

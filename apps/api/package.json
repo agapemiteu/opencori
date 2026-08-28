@@ -1,18 +1,8 @@
 {
-  "name": "@corri/mock-wema-receiver",
+  "name": "@corri/api",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "exports": {
-    "./demo-keys": {
-      "types": "./dist/demo-keys.d.ts",
-      "import": "./dist/demo-keys.js"
-    },
-    "./receiver-service": {
-      "types": "./dist/receiver.service.d.ts",
-      "import": "./dist/receiver.service.js"
-    }
-  },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "clean": "rimraf dist",
@@ -26,15 +16,17 @@
   "dependencies": {
     "@corri/config-verifier": "workspace:*",
     "@corri/contracts": "workspace:*",
-    "@corri/crypto-envelope": "workspace:*",
     "@nestjs/common": "catalog:",
     "@nestjs/core": "catalog:",
     "@nestjs/platform-fastify": "catalog:",
     "fastify": "catalog:",
     "reflect-metadata": "catalog:",
-    "rxjs": "catalog:"
+    "rxjs": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
+    "@corri/crypto-envelope": "workspace:*",
+    "@corri/mock-receiver": "workspace:*",
     "@nestjs/testing": "catalog:",
     "rimraf": "catalog:",
     "tsx": "catalog:",

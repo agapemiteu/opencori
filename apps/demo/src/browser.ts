@@ -59,7 +59,7 @@ export async function loadAlatDemoBrowserBootstrap(
   const fetcher = input.fetch ?? browserFetch;
   const cryptoProvider = input.crypto ?? globalThis.crypto;
   const apiBaseUrl = input.apiBaseUrl.replace(/\/$/, "");
-  const response = await fetcher(apiBaseUrl + "/v1/demo/catalog", {
+  const response = await fetcher(apiBaseUrl + "/v1/catalog", {
     method: "GET",
     headers: { accept: "application/json" },
   });

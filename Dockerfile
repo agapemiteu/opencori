@@ -13,17 +13,17 @@ FROM base AS build
 WORKDIR /repo
 COPY . .
 # Installs only the two backends and their workspace dependencies. A plain
-# install pulls in Next and React for alat-demo and website, which the backend
+# install pulls in Next and React for the demo app, which the backend
 # never runs: 532 packages instead of 319, and enough memory to fail a build on
 # a small instance.
 RUN pnpm install --frozen-lockfile \
-  --filter "@corri/control-api..." \
-  --filter "@corri/mock-wema-receiver..."
-RUN pnpm --filter "@corri/control-api..." --filter "@corri/mock-wema-receiver..." build
+  --filter "@corri/api..." \
+  --filter "@corri/mock-receiver..."
+RUN pnpm --filter "@corri/api..." --filter "@corri/mock-receiver..." build
 # Bundles each app with its workspace dependencies into a standalone tree.
 # --legacy is required because this workspace does not inject dependencies.
-RUN pnpm --filter "@corri/control-api" deploy --prod --legacy /out/control-api
-RUN pnpm --filter "@corri/mock-wema-receiver" deploy --prod --legacy /out/receiver
+RUN pnpm --filter "@corri/api" deploy --prod --legacy /out/api
+RUN pnpm --filter "@corri/mock-receiver" deploy --prod --legacy /out/receiver
 
 FROM base AS runtime
 WORKDIR /app
@@ -33,7 +33,7 @@ RUN addgroup -S corri && adduser -S corri -G corri && chown -R corri:corri /app
 USER corri
 EXPOSE 10000
 # Which service this container runs. Set CORRI_SERVICE=receiver to run the mock
-# Wema receiver instead. Chosen by environment rather than by overriding the
+# receiver instead. Chosen by environment rather than by overriding the
 # command, because not every host lets you override a container's command.
-ENV CORRI_SERVICE=control-api
+ENV CORRI_SERVICE=api
 CMD ["sh", "-c", "node ${CORRI_SERVICE}/dist/main.js"]

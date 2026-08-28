@@ -54,9 +54,8 @@ services:
       # instead of the 503 this service would have sent. Worst case here is
       # 3 x 20s of attempts plus 2 x 3s of backoff, which is 66s.
       #
-      # The keep-warm workflow in .github/workflows should mean the receiver is
-      # never cold in the first place. This budget is the fallback for when a
-      # scheduled run is skipped or delayed.
+      # This budget is what keeps a cold receiver from failing the first
+      # delivery after an idle period.
       - key: WEMA_DEMO_WEBHOOK_TIMEOUT_MS
         value: "20000"
       # A suspended receiver refuses the first calls outright while it wakes,
