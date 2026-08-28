@@ -47,8 +47,12 @@ services:
       # follow-up. Render derives service hostnames from the names above, so
       # the receiver URL is known in advance.
       # No wildcards in the origins list, the API rejects them.
+      # Comma separated. opencori-demo is the client built from the SDK
+      # repository; corri-alat-demo is the older manually deployed one, kept
+      # until it is retired. A browser is refused outright without its exact
+      # origin here, and the failure reads as "could not reach the API".
       - key: CORRI_CORS_ORIGINS
-        value: https://corri-alat-demo.vercel.app
+        value: https://opencori-demo.vercel.app,https://corri-alat-demo.vercel.app
       - key: WEMA_DEMO_WEBHOOK_URL
         value: https://corri-mock-wema-receiver.onrender.com/v1/wema/deliveries
       # A free Render service takes ~50s to wake from idle. The default 10s
