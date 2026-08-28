@@ -4,6 +4,7 @@ export * from "./configuration.js";
 export * from "./continuity.js";
 export * from "./delivery.js";
 export * from "./nearby.js";
+export * from "./onboarding.js";
 export * from "./primitives.js";
 export * from "./telemetry.js";
 export * from "./tenant.js";
