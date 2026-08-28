@@ -100,6 +100,21 @@ is by definition what the schedule did not predict.
 
 ## API
 
+Onboarding. Every route needs the tenant's API key except creating the tenant,
+which is what issues it:
+
+| Method | Endpoint                                           | What it does              |
+| ------ | -------------------------------------------------- | ------------------------- |
+| POST   | `/v1/tenants`                                      | Register, returns the key |
+| POST   | `/v1/tenants/:tenantId/applications`               | Register an application   |
+| GET    | `/v1/tenants/:tenantId/applications/:appId/policy` | Read timer and cooldowns  |
+| PUT    | `/v1/tenants/:tenantId/applications/:appId/policy` | Set timer and cooldowns   |
+| PUT    | `/v1/tenants/:tenantId/branches`                   | Bulk upload locations     |
+| GET    | `/v1/tenants/:tenantId/branches`                   | List locations            |
+| PATCH  | `/v1/tenants/:tenantId/branches/:branchId`         | Switch off, adjust radii  |
+
+Read and device-facing routes:
+
 | Method | Endpoint                      | What it does                     |
 | ------ | ----------------------------- | -------------------------------- |
 | GET    | `/v1/health`                  | Is the service up                |
@@ -124,19 +139,53 @@ Receiver, standing in for the receiving organisation's own system:
 | GET    | `/v1/wema/messages`   | Messages the receiver unlocked |
 | POST   | `/v1/wema/deliveries` | Where OpenCori drops them off  |
 
+## Onboarding your own locations
+
+Two calls. The first gives you a key; the second uploads your locations.
+
+```bash
+# 1. Register. The apiKey comes back once and is never shown again.
+curl -sX POST http://localhost:3000/v1/tenants \
+  -H 'content-type: application/json' \
+  -d '{"id":"your-bank","name":"Your Bank"}'
+
+# 2. Upload locations.
+curl -sX PUT http://localhost:3000/v1/tenants/your-bank/branches \
+  -H "authorization: Bearer $OPENCORI_API_KEY" \
+  -H 'content-type: application/json' \
+  -d '{"branches":[{
+        "id":"marina",
+        "externalBranchId":"WB-001",
+        "name":"Marina",
+        "addressLine1":"54 Marina",
+        "city":"Lagos",
+        "stateOrRegion":"Lagos",
+        "countryCode":"NG",
+        "timeZone":"Africa/Lagos"
+      }]}'
+```
+
+That is the whole required shape. The geofence radii default to 250 m approach,
+100 m visit, 150 m exit; add `latitude` and `longitude` when you have them.
+Upload is idempotent by `id`, so re-sending your whole location file moves only
+what changed.
+
+To switch a location off, or change its radii:
+
+```bash
+curl -sX PATCH http://localhost:3000/v1/tenants/your-bank/branches/marina \
+  -H "authorization: Bearer $OPENCORI_API_KEY" \
+  -H 'content-type: application/json' -d '{"active":false}'
+```
+
+The visit timer and cooldowns live on the application policy, at
+`PUT /v1/tenants/:tenantId/applications/:applicationId/policy`.
+
 ## Not built yet
 
-Locations are currently a fixed seed in `apps/api/src/demo/demo-seed.ts`: one
-tenant, one application, ten branches. There is no way for an organisation to
-onboard its own.
-
-Reaching "any developer onboards any organisation's locations" needs four
-things:
-
-- Persistence, so a catalog outlives a restart
-- Write endpoints: create tenant, create application, bulk-upload locations
-- API keys, so an organisation authenticates as itself
-- Per-location settings, starting with the visit timer
+The catalog is held in memory and **does not survive a restart**.
+`CatalogRepository` in `apps/api/src/catalog/` is the seam a durable
+implementation slots into; nothing above it changes when it does.
 
 Adding a database does not weaken the privacy claim. Locations and tenants are
 the organisation's own configuration, not customer data. Nothing readable about
