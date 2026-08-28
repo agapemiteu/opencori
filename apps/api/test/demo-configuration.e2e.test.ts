@@ -1,4 +1,8 @@
 import {
+  CATALOG_REPOSITORY,
+  InMemoryCatalogRepository,
+} from "../src/catalog/catalog.repository.js";
+import {
   apiErrorSchema,
   demoBranchesResponseSchema,
   demoAnalyticsResponseSchema,
@@ -29,6 +33,8 @@ describe("Wema ALAT demo configuration", () => {
 
   async function createTestApplication(): Promise<NestFastifyApplication> {
     const moduleReference = await Test.createTestingModule({ imports: [AppModule] })
+      .overrideProvider(CATALOG_REPOSITORY)
+      .useValue(new InMemoryCatalogRepository())
       .overrideProvider(CLOCK)
       .useValue(fixedClock)
       .compile();

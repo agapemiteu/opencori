@@ -1,3 +1,7 @@
+import {
+  CATALOG_REPOSITORY,
+  InMemoryCatalogRepository,
+} from "../src/catalog/catalog.repository.js";
 import { apiErrorSchema, healthResponseSchema } from "@opencori/contracts";
 import { Controller, Get, HttpException, HttpStatus } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
@@ -45,6 +49,8 @@ describe("control API", () => {
       controllers: [FailureController, PayloadTooLargeController],
       imports: [AppModule],
     })
+      .overrideProvider(CATALOG_REPOSITORY)
+      .useValue(new InMemoryCatalogRepository())
       .overrideProvider(CLOCK)
       .useValue(fixedClock)
       .compile();

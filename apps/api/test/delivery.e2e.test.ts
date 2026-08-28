@@ -1,4 +1,8 @@
 import {
+  CATALOG_REPOSITORY,
+  InMemoryCatalogRepository,
+} from "../src/catalog/catalog.repository.js";
+import {
   deliveryReceiptSchema,
   demoAnalyticsResponseSchema,
   demoCatalogResponseSchema,
@@ -57,6 +61,8 @@ describe("encrypted delivery gateway", () => {
       },
     };
     const moduleReference = await Test.createTestingModule({ imports: [AppModule] })
+      .overrideProvider(CATALOG_REPOSITORY)
+      .useValue(new InMemoryCatalogRepository())
       .overrideProvider(CLOCK)
       .useValue(clock)
       .overrideProvider(DELIVERY_DESTINATION)

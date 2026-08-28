@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import type { BranchInput, Tenant } from "@opencori/contracts";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   InMemoryCatalogRepository,
@@ -68,7 +68,7 @@ function runContract(name: string, create: () => Promise<CatalogRepository>): vo
     it("stores and returns a tenant", async () => {
       const repository = await create();
       const id = unique();
-      await repository.createTenant(tenant(id), hashApiKey("secret"));
+      await repository.createTenant(tenant(id), hashApiKey(`secret-${id}`));
 
       expect(await repository.getTenant(id)).toMatchObject({ id, demo: false });
       expect(await repository.getTenant("never-created")).toBeUndefined();
@@ -77,10 +77,11 @@ function runContract(name: string, create: () => Promise<CatalogRepository>): vo
     it("resolves a tenant from its API key, and only the right one", async () => {
       const repository = await create();
       const id = unique();
-      await repository.createTenant(tenant(id), hashApiKey("the-key"));
+      const theKey = `the-key-${id}`;
+      await repository.createTenant(tenant(id), hashApiKey(theKey));
 
-      expect(await repository.findTenantIdByApiKey("the-key")).toBe(id);
-      expect(await repository.findTenantIdByApiKey("not-the-key")).toBeUndefined();
+      expect(await repository.findTenantIdByApiKey(theKey)).toBe(id);
+      expect(await repository.findTenantIdByApiKey(`not-${theKey}`)).toBeUndefined();
     });
 
     it("counts a first upload as created and a repeat as updated", async () => {
@@ -224,21 +225,28 @@ function runContract(name: string, create: () => Promise<CatalogRepository>): vo
         const repository = await create();
         const first = unique();
         const second = unique();
-        await repository.createTenant(tenant(first), hashApiKey("key-one"));
-        await repository.createTenant(tenant(second), hashApiKey("key-two"));
+        await repository.createTenant(tenant(first), hashApiKey(`key-${first}`));
+        await repository.createTenant(tenant(second), hashApiKey(`key-${second}`));
 
-        expect(await repository.findTenantIdByApiKey("key-one")).toBe(first);
-        expect(await repository.findTenantIdByApiKey("key-two")).toBe(second);
+        expect(await repository.findTenantIdByApiKey(`key-${first}`)).toBe(first);
+        expect(await repository.findTenantIdByApiKey(`key-${second}`)).toBe(second);
       });
 
       it("refuses a key that is close but not equal", async () => {
         const repository = await create();
         const id = unique();
-        await repository.createTenant(tenant(id), hashApiKey("oc_correct-key"));
+        const correct = `oc_correct-${id}`;
+        await repository.createTenant(tenant(id), hashApiKey(correct));
 
         // A prefix, a suffix, and a case change must all fail: the stored value
         // is a hash, so matching is all-or-nothing rather than partial.
-        for (const attempt of ["oc_correct-ke", "oc_correct-key ", "oc_correct-Key", "oc_", ""]) {
+        for (const attempt of [
+          correct.slice(0, -1),
+          `${correct} `,
+          correct.toUpperCase(),
+          "oc_",
+          "",
+        ]) {
           expect(await repository.findTenantIdByApiKey(attempt)).toBeUndefined();
         }
       });
@@ -246,13 +254,13 @@ function runContract(name: string, create: () => Promise<CatalogRepository>): vo
       it("stores the hash, never the key itself", async () => {
         const repository = await create();
         const id = unique();
-        const key = "oc_super-secret-value";
+        const key = `oc_super-secret-${id}`;
         await repository.createTenant(tenant(id), hashApiKey(key));
 
         // Whatever a store hands back about a tenant must not contain the key.
         const stored = JSON.stringify(await repository.getTenant(id));
         expect(stored).not.toContain(key);
-        expect(stored).not.toContain("super-secret");
+        expect(stored).not.toContain(`super-secret-${id}`);
       });
     });
   });
@@ -267,6 +275,11 @@ const databaseUrl = process.env.DATABASE_URL;
 const describePostgres = databaseUrl === undefined ? describe.skip : describe;
 
 describePostgres("PostgresCatalogRepository (DATABASE_URL set)", () => {
+  // A hosted database is a network round trip per statement, and each case
+  // opens a connection and runs the schema before it starts. Vitest's 5s
+  // default is a local-only assumption and fails these on latency alone.
+  vi.setConfig({ testTimeout: 60_000, hookTimeout: 60_000 });
+
   runContract("PostgresCatalogRepository", async () => {
     const repository = new PostgresCatalogRepository(databaseUrl as string);
     await repository.initialize();
