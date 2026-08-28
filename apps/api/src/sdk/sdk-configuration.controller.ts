@@ -1,4 +1,4 @@
-import type { SignedConfiguration } from "@corri/contracts";
+import type { SignedConfiguration } from "@opencori/contracts";
 import { BadRequestException, Controller, Get, Inject, Query } from "@nestjs/common";
 import { z } from "zod";
 

@@ -2,7 +2,7 @@ import type {
   DemoBranchesResponse,
   DemoCatalogResponse,
   SignedConfiguration,
-} from "@corri/contracts";
+} from "@opencori/contracts";
 import { z } from "zod";
 import { BadRequestException, Body, Controller, Get, Inject, Post } from "@nestjs/common";
 

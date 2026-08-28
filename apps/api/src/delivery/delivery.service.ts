@@ -1,11 +1,11 @@
-import { signPayload } from "@corri/config-verifier";
+import { signPayload } from "@opencori/config-verifier";
 import {
   deliveryReceiptSchema,
   receiverAcknowledgementSchema,
   signedDeliveryAttemptSchema,
   type DeliveryEnvelope,
   type DeliveryReceipt,
-} from "@corri/contracts";
+} from "@opencori/contracts";
 import {
   BadGatewayException,
   ConflictException,

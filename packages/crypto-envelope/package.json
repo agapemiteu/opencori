@@ -1,5 +1,5 @@
 {
-  "name": "@corri/crypto-envelope",
+  "name": "@opencori/crypto-envelope",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -24,7 +24,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@corri/contracts": "workspace:*"
+    "@opencori/contracts": "workspace:*"
   },
   "devDependencies": {
     "typescript": "catalog:",

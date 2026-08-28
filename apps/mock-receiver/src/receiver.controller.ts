@@ -1,4 +1,4 @@
-import type { ReceiverAcknowledgement } from "@corri/contracts";
+import type { ReceiverAcknowledgement } from "@opencori/contracts";
 import { Body, Controller, Get, Inject, Post } from "@nestjs/common";
 
 import { ReceiverService, type ReceivedWemaMessage } from "./receiver.service.js";

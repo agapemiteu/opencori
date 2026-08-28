@@ -1,5 +1,5 @@
 {
-  "name": "@corri/mock-receiver",
+  "name": "@opencori/mock-receiver",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -24,9 +24,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@corri/config-verifier": "workspace:*",
-    "@corri/contracts": "workspace:*",
-    "@corri/crypto-envelope": "workspace:*",
+    "@opencori/config-verifier": "workspace:*",
+    "@opencori/contracts": "workspace:*",
+    "@opencori/crypto-envelope": "workspace:*",
     "@nestjs/common": "catalog:",
     "@nestjs/core": "catalog:",
     "@nestjs/platform-fastify": "catalog:",

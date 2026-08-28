@@ -8,7 +8,7 @@ import {
   randomBytes,
 } from "node:crypto";
 
-import { encryptedPayloadSchema, type EncryptedPayload } from "@corri/contracts";
+import { encryptedPayloadSchema, type EncryptedPayload } from "@opencori/contracts";
 
 export interface EncryptedRequest {
   encryptedPayload: EncryptedPayload;

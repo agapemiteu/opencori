@@ -1,12 +1,12 @@
 import { createPublicKey } from "node:crypto";
 
-import { signPayload } from "@corri/config-verifier";
+import { signPayload } from "@opencori/config-verifier";
 import {
   deliveryEnvelopeSchema,
   receiverAcknowledgementSchema,
   signedDeliveryAttemptSchema,
-} from "@corri/contracts";
-import { encryptRequest } from "@corri/crypto-envelope";
+} from "@opencori/contracts";
+import { encryptRequest } from "@opencori/crypto-envelope";
 import { Test } from "@nestjs/testing";
 import { FastifyAdapter, type NestFastifyApplication } from "@nestjs/platform-fastify";
 import {

@@ -6,7 +6,7 @@ import {
   type PrivacyProofResponse,
   type VisitEvent,
   type VisitEventIngestionReceipt,
-} from "@corri/contracts";
+} from "@opencori/contracts";
 import { ForbiddenException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 
 import {

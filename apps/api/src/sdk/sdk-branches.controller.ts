@@ -1,4 +1,4 @@
-import { nearbyBranchesQuerySchema, type SignedNearbyBranchesResponse } from "@corri/contracts";
+import { nearbyBranchesQuerySchema, type SignedNearbyBranchesResponse } from "@opencori/contracts";
 import { BadRequestException, Controller, Get, Inject, Query } from "@nestjs/common";
 
 import { NearbyBranchesService } from "./nearby-branches.service.js";

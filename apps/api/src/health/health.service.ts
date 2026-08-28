@@ -1,4 +1,4 @@
-import { healthResponseSchema, type HealthResponse } from "@corri/contracts";
+import { healthResponseSchema, type HealthResponse } from "@opencori/contracts";
 import { Inject, Injectable } from "@nestjs/common";
 
 import { EnvironmentService } from "../config/environment.js";

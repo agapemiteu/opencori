@@ -2,7 +2,7 @@ import {
   receiverAcknowledgementSchema,
   type ReceiverAcknowledgement,
   type SignedDeliveryAttempt,
-} from "@corri/contracts";
+} from "@opencori/contracts";
 import { Inject, Injectable, ServiceUnavailableException } from "@nestjs/common";
 
 import { EnvironmentService } from "../config/environment.js";

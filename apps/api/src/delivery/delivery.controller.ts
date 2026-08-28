@@ -3,7 +3,7 @@ import {
   eventIdSchema,
   tenantIdSchema,
   type DeliveryReceipt,
-} from "@corri/contracts";
+} from "@opencori/contracts";
 import {
   BadRequestException,
   Body,

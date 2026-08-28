@@ -5,7 +5,7 @@ import {
   type Application,
   type Branch,
   type Tenant,
-} from "@corri/contracts";
+} from "@opencori/contracts";
 
 export const DEMO_CONFIGURATION_KEY_ID = "wema-demo-config-key-01";
 export const DEMO_CONFIGURATION_VERSION = "wema-alat-demo-2026-08-03.1";

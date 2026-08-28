@@ -1,10 +1,10 @@
 # Corri SDK
 
-`@corri/sdk` handles signed branch configuration, visit state, and encrypted
+`@opencori/sdk` handles signed branch configuration, visit state, and encrypted
 delivery.
 
 ```bash
-npm install @corri/sdk
+npm install @opencori/sdk
 ```
 
 Forking this repo? Use the tested helper in [Getting started](GETTING_STARTED.md).
@@ -26,7 +26,7 @@ Types such as `DeliveryEnvelope`, `DeliveryReceipt`,
 ## Create a client
 
 ```ts
-import { createCorriClient, verifySignedPayloadWithWebCrypto } from "@corri/sdk";
+import { createCorriClient, verifySignedPayloadWithWebCrypto } from "@opencori/sdk";
 
 const corri = createCorriClient({
   apiBaseUrl,

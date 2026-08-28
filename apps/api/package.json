@@ -1,5 +1,5 @@
 {
-  "name": "@corri/api",
+  "name": "@opencori/api",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -14,8 +14,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@corri/config-verifier": "workspace:*",
-    "@corri/contracts": "workspace:*",
+    "@opencori/config-verifier": "workspace:*",
+    "@opencori/contracts": "workspace:*",
     "@nestjs/common": "catalog:",
     "@nestjs/core": "catalog:",
     "@nestjs/platform-fastify": "catalog:",
@@ -25,8 +25,8 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@corri/crypto-envelope": "workspace:*",
-    "@corri/mock-receiver": "workspace:*",
+    "@opencori/crypto-envelope": "workspace:*",
+    "@opencori/mock-receiver": "workspace:*",
     "@nestjs/testing": "catalog:",
     "rimraf": "catalog:",
     "tsx": "catalog:",

@@ -3,7 +3,7 @@ import {
   type DemoAnalyticsResponse,
   type PrivacyProofResponse,
   type VisitEventIngestionReceipt,
-} from "@corri/contracts";
+} from "@opencori/contracts";
 import { BadRequestException, Body, Controller, Get, Inject, Post } from "@nestjs/common";
 
 import { VisitEventService } from "./visit-event.service.js";

@@ -1,4 +1,4 @@
-import type { Application, Branch, Tenant } from "@corri/contracts";
+import type { Application, Branch, Tenant } from "@opencori/contracts";
 import { Injectable } from "@nestjs/common";
 
 import { alatDemoApplication, wemaDemoBranches, wemaDemoTenant } from "./demo-seed.js";

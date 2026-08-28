@@ -1,13 +1,13 @@
 import { createHash } from "node:crypto";
 
-import { canonicalize, verifySignedPayload } from "@corri/config-verifier";
+import { canonicalize, verifySignedPayload } from "@opencori/config-verifier";
 import {
   receiverAcknowledgementSchema,
   signedDeliveryAttemptSchema,
   type ReceiverAcknowledgement,
   type SignedDeliveryAttempt,
-} from "@corri/contracts";
-import { decryptRequest, hashEncryptedPayload } from "@corri/crypto-envelope";
+} from "@opencori/contracts";
+import { decryptRequest, hashEncryptedPayload } from "@opencori/crypto-envelope";
 import {
   ConflictException,
   Inject,

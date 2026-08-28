@@ -1,4 +1,4 @@
-import type { DeliveryEnvelope, VisitEvent } from "@corri/contracts";
+import type { DeliveryEnvelope, VisitEvent } from "@opencori/contracts";
 import { ConflictException, Injectable } from "@nestjs/common";
 
 export const VISIT_EVENT_REPOSITORY = Symbol("VISIT_EVENT_REPOSITORY");

@@ -4,8 +4,8 @@ import {
   type NearbyBranch,
   type NearbyBranchesQuery,
   type SignedNearbyBranchesResponse,
-} from "@corri/contracts";
-import { signPayload } from "@corri/config-verifier";
+} from "@opencori/contracts";
+import { signPayload } from "@opencori/config-verifier";
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 
 import {

@@ -1,5 +1,5 @@
 {
-  "name": "@corri/config-verifier",
+  "name": "@opencori/config-verifier",
   "version": "0.0.0",
   "private": true,
   "type": "module",

@@ -7,8 +7,8 @@ import {
   publicConfigurationSchema,
   signedConfigurationSchema,
   type SignedConfiguration,
-} from "@corri/contracts";
-import { signPayload } from "@corri/config-verifier";
+} from "@opencori/contracts";
+import { signPayload } from "@opencori/config-verifier";
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 
 import { CLOCK, type Clock } from "../platform/clock.js";

@@ -117,7 +117,7 @@ await host.corri.completeStableExit();
 
 - Never replace signature verification with `return true`.
 - Never send readable customer text to Corri.
-- Never import `@corri/crypto-envelope` into browser code.
+- Never import `@opencori/crypto-envelope` into browser code.
 - Never commit `.next`, `dist`, `node_modules`, keys, or local env files.
 
 ## Fix common errors

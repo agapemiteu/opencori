@@ -1,4 +1,4 @@
-import { visitCompletedEventSchema, visitStartedEventSchema } from "@corri/contracts";
+import { visitCompletedEventSchema, visitStartedEventSchema } from "@opencori/contracts";
 import { describe, expect, it } from "vitest";
 
 import { InMemoryVisitEventRepository } from "../src/visits/visit-event.repository.js";

@@ -1,4 +1,4 @@
-import type { Branch, DeliveryEnvelope, VisitEvent } from "@corri/contracts";
+import type { Branch, DeliveryEnvelope, VisitEvent } from "@opencori/contracts";
 import { ForbiddenException } from "@nestjs/common";
 import { beforeEach, describe, expect, it } from "vitest";
 

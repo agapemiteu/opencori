@@ -1,4 +1,4 @@
-import type { HealthResponse } from "@corri/contracts";
+import type { HealthResponse } from "@opencori/contracts";
 import { Controller, Get, Inject } from "@nestjs/common";
 
 import { HealthService } from "./health.service.js";

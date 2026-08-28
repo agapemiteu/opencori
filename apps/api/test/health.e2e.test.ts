@@ -1,4 +1,4 @@
-import { apiErrorSchema, healthResponseSchema } from "@corri/contracts";
+import { apiErrorSchema, healthResponseSchema } from "@opencori/contracts";
 import { Controller, Get, HttpException, HttpStatus } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import type { NestFastifyApplication } from "@nestjs/platform-fastify";

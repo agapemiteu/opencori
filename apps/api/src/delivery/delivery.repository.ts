@@ -1,13 +1,13 @@
 import { createHash } from "node:crypto";
 
-import { canonicalize } from "@corri/config-verifier";
+import { canonicalize } from "@opencori/config-verifier";
 import {
   deliveryReceiptSchema,
   type DeliveryEnvelope,
   type DeliveryReceipt,
   type EncryptedPayload,
   type ReceiverAcknowledgement,
-} from "@corri/contracts";
+} from "@opencori/contracts";
 import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 
 export const DELIVERY_REPOSITORY = Symbol("DELIVERY_REPOSITORY");

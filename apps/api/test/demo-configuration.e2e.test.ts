@@ -7,8 +7,8 @@ import {
   signedConfigurationSchema,
   signedNearbyBranchesResponseSchema,
   visitEventIngestionReceiptSchema,
-} from "@corri/contracts";
-import { verifySignedPayload } from "@corri/config-verifier";
+} from "@opencori/contracts";
+import { verifySignedPayload } from "@opencori/config-verifier";
 import { Test } from "@nestjs/testing";
 import type { NestFastifyApplication } from "@nestjs/platform-fastify";
 import { afterEach, describe, expect, it } from "vitest";

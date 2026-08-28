@@ -4,15 +4,15 @@ import {
   demoCatalogResponseSchema,
   privacyProofResponseSchema,
   type SignedDeliveryAttempt,
-} from "@corri/contracts";
-import { encryptRequest } from "@corri/crypto-envelope";
+} from "@opencori/contracts";
+import { encryptRequest } from "@opencori/crypto-envelope";
 import {
   CORRI_DEMO_WEBHOOK_SIGNING_KEY_ID,
   CORRI_DEMO_WEBHOOK_SIGNING_PUBLIC_KEY,
   WEMA_DEMO_ENCRYPTION_KEY_ID,
   WEMA_DEMO_ENCRYPTION_PRIVATE_KEY,
-} from "@corri/mock-receiver/demo-keys";
-import { ReceiverService, type ReceiverSettings } from "@corri/mock-receiver/receiver-service";
+} from "@opencori/mock-receiver/demo-keys";
+import { ReceiverService, type ReceiverSettings } from "@opencori/mock-receiver/receiver-service";
 import { Test } from "@nestjs/testing";
 import type { NestFastifyApplication } from "@nestjs/platform-fastify";
 import { afterEach, describe, expect, it } from "vitest";

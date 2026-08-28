@@ -17,13 +17,13 @@ COPY . .
 # never runs: 532 packages instead of 319, and enough memory to fail a build on
 # a small instance.
 RUN pnpm install --frozen-lockfile \
-  --filter "@corri/api..." \
-  --filter "@corri/mock-receiver..."
-RUN pnpm --filter "@corri/api..." --filter "@corri/mock-receiver..." build
+  --filter "@opencori/api..." \
+  --filter "@opencori/mock-receiver..."
+RUN pnpm --filter "@opencori/api..." --filter "@opencori/mock-receiver..." build
 # Bundles each app with its workspace dependencies into a standalone tree.
 # --legacy is required because this workspace does not inject dependencies.
-RUN pnpm --filter "@corri/api" deploy --prod --legacy /out/api
-RUN pnpm --filter "@corri/mock-receiver" deploy --prod --legacy /out/receiver
+RUN pnpm --filter "@opencori/api" deploy --prod --legacy /out/api
+RUN pnpm --filter "@opencori/mock-receiver" deploy --prod --legacy /out/receiver
 
 FROM base AS runtime
 WORKDIR /app
