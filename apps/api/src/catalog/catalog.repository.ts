@@ -21,7 +21,7 @@ export interface UpsertOutcome {
 
 /**
  * What the read path needs. Delivery, visit events, and nearby lookups only
- * ever ask questions, so they depend on this rather than the full repository —
+ * ever ask questions, so they depend on this rather than the full repository:
  * a narrower contract to implement when swapping the store, and a much smaller
  * thing to fake in a test.
  */

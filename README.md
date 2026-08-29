@@ -6,7 +6,7 @@ Why does walking into a bank still feel like the bank has no idea you're there?
 You enter, take a number, wait, and when it is finally your turn, you explain
 everything from scratch.
 
-OpenCori lets the branch know what you need before you reach the counter —
+OpenCori lets the branch know what you need before you reach the counter,
 without OpenCori being able to read what you said.
 
 [Live demo](https://opencori-demo.vercel.app) ·
@@ -16,7 +16,7 @@ without OpenCori being able to read what you said.
 
 1. The customer comes close to a bank's configured geofence, and the banking app
    asks: **"Are you visiting this branch?"**
-2. If they tap yes, they select what they came for — card replacement, loan
+2. If they tap yes, they select what they came for: card replacement, loan
    services, an account issue.
 3. **The request is encrypted on the device before it leaves the phone.**
 4. OpenCori routes the encrypted request to the bank. Only the bank can open it.
@@ -43,8 +43,8 @@ OpenCori tracks the visit and collects feedback afterwards, without reading the
 request. So instead of seeing **"2 stars"**, a manager can see
 **"2 stars, Loan Services, Marina branch."**
 
-That is a much more useful signal. `/v1/analytics` reports visit duration —
-the median and the slowest tenth — and every visit carries the location it
+That is a much more useful signal. `/v1/analytics` reports visit duration,
+the median and the slowest tenth, and every visit carries the location it
 happened at, so branches can be compared on volume, waiting time, and rating.
 
 ## Run it
@@ -108,7 +108,7 @@ curl -sX POST http://localhost:3000/v1/tenants/your-bank/applications \
 ```
 
 Eight fields is the whole required shape for a branch. Geofence radii default to
-250 m approach, 100 m visit, 150 m exit — add `latitude` and `longitude` when you
+250 m approach, 100 m visit, 150 m exit. Add `latitude` and `longitude` when you
 have them.
 
 Switching a branch off refuses new visits and stops delivery immediately, even
@@ -164,7 +164,7 @@ Read and device-facing routes.
 | POST   | `/v1/sdk/deliveries`          | Send an encrypted message        |
 | GET    | `/v1/sdk/deliveries/:eventId` | Delivery receipt                 |
 
-`/v1/sdk/*` is the surface the published SDK calls — treat those paths as a
+`/v1/sdk/*` is the surface the published SDK calls, so treat those paths as a
 released contract.
 
 ## Layout
@@ -202,7 +202,7 @@ We built the core, proved the approach, and made the project public for anyone
 interested in taking it further. There are still things that can be improved, and
 we are not trying to build every possible version ourselves.
 
-Fork it, branch, and open a pull request. Run `pnpm check` first — it must pass.
+Fork it, branch, and open a pull request. Run `pnpm check` first, and it must pass.
 Tests live beside the code they cover, and a bug fix should come with the test
 that would have caught it.
 

@@ -387,7 +387,7 @@ describe("organisation onboarding", () => {
      * An onboarded application must be able to verify what it receives using
      * the key it was given. Before this, every response was signed with the
      * seeded demo key regardless of tenant, so a real organisation's client
-     * pinned one key and was sent another — every verification would fail.
+     * pinned one key and was sent another, so every verification would fail.
      */
     it("signs a tenant's responses with the key that tenant was issued", async () => {
       const testApp = await createTestApplication();

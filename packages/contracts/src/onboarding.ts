@@ -41,7 +41,7 @@ export const createTenantRequestSchema = z
  * The configuration signing key is deliberately absent: OpenCori issues it, the
  * same way it issues the API key. Signing needs the private half, so a caller
  * supplying only a public key would leave OpenCori unable to sign anything as
- * that application — it would fall back to some other key and every response
+ * that application because it would fall back to another key and every response
  * would fail verification in the caller's own SDK.
  *
  * The generated public key comes back in the response. Pin that in the client.

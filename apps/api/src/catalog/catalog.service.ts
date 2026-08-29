@@ -190,8 +190,8 @@ export class CatalogService {
     }
 
     // Validated before it is stored, not after. A patch is individually valid
-    // yet can still invert the radius ordering once merged — an exit radius
-    // below the existing visit radius, say — and that is the caller's mistake,
+    // yet can still invert the radius ordering once merged, say an exit radius
+    // below the existing visit radius, and that is the caller's mistake,
     // so it has to be a 400 rather than a 500 from a write that already landed.
     const candidate = branchSchema.safeParse({
       ...existing,

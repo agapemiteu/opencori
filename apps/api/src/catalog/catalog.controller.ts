@@ -31,7 +31,7 @@ import { CatalogService } from "./catalog.service.js";
  * Onboarding: how an organisation registers itself and the locations it wants
  * watched.
  *
- * Creating a tenant is deliberately unguarded — it is the call that issues the
+ * Creating a tenant is deliberately unguarded, because it is the call that issues the
  * first API key, so there is nothing to authenticate with yet. Everything
  * below it is guarded, and the guard also checks that the key belongs to the
  * tenant named in the path.
